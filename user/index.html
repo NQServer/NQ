@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NQServer - پنل کاربری</title>
+    <!-- فونت وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <style>
+        :root {
+            --bg: #0b0d11;
+            --card-bg: #151a22;
+            --text-main: #e9edf4;
+            --text-muted: #8b95a9;
+            --accent: #0ea5e9;
+            --accent-dark: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border: #1f2937;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            direction: rtl;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* هدر */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand .logo {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand .sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .lang-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .lang-btn:hover {
+            border-color: var(--accent);
+        }
+
+        /* کارت اطلاعات کاربر */
+        .stats-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-item .value.green {
+            color: var(--success);
+        }
+        .stat-item .value.yellow {
+            color: var(--warning);
+        }
+        .stat-item .value.blue {
+            color: var(--accent);
+        }
+
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #2a3341;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--accent));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* لینک اشتراک */
+        .link-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .link-box input {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 14px;
+            flex: 1;
+            outline: none;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .link-box button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .link-box button:hover {
+            background: var(--accent-dark);
+        }
+
+        /* کارت‌های کانفیگ */
+        .configs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .config-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .config-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .config-card .title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .config-card .qr {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 10px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .config-card .qr img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .config-card .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .config-card .btn-group button {
+            flex: 1;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 6px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .config-card .btn-group button.copy-btn {
+            background: #2a3341;
+        }
+
+        .config-card .btn-group button:hover {
+            opacity: 0.9;
+        }
+
+        /* فوتر */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+        /* واکنش‌گرا */
+        @media (max-width: 480px) {
+            .stats-grid, .configs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- هدر -->
+        <div class="header">
+            <div class="brand">
+                <span class="logo">NQServer</span>
+                <span class="sub">پنل کاربری</span>
+            </div>
+            <div class="lang-btn" onclick="toggleLang()">EN / FA</div>
+        </div>
+
+        <!-- کارت اطلاعات کاربر -->
+        <div class="stats-card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="label">حجم مصرف شده</div>
+                    <div class="value blue" id="used">0 GB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">حجم باقی‌مانده</div>
+                    <div class="value green" id="remaining">50 GB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">کل حجم</div>
+                    <div class="value" id="total">50 GB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">زمان باقی‌مانده</div>
+                    <div class="value yellow" id="expiry">180 روز</div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="usedLabel">0% مصرف</span>
+                    <span id="remainingLabel">100% باقی‌مانده</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- لینک اشتراک -->
+        <div class="link-box">
+            <input type="text" id="subLink" value="در حال بارگذاری..." readonly>
+            <button onclick="copySubLink()">کپی لینک</button>
+        </div>
+
+        <!-- کارت‌های کانفیگ -->
+        <div class="configs-grid" id="configsContainer">
+            <!-- کارت‌ها توسط JS ساخته میشن -->
+        </div>
+
+        <div class="footer">
+            &copy; 2026 NQServer. تمامی حقوق محفوظ است.
+        </div>
+    </div>
+
+    <script>
+        // --- دریافت اطلاعات از URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const sub = urlParams.get('sub') || 'user1';
+        const key = urlParams.get('key') || '';
+
+        // --- اطلاعات فرضی کاربر (در واقعیت باید از API خوانده شود) ---
+        // اینجا می‌تونی از fetch استفاده کنی و اطلاعات رو از Worker بگیری
+        const userData = {
+            username: sub,
+            used: 12.5, // GB
+            total: 50, // GB
+            expiryDays: 180,
+            configs: [
+                {
+                    name: 'VLESS',
+                    icon: '🔵',
+                    link: `vless://00000000-0000-4000-8000-000000000000@example.com:443?security=tls&type=ws&host=example.com&path=/&encryption=none#NQServer-VLESS`
+                },
+                {
+                    name: 'Trojan',
+                    icon: '🟡',
+                    link: `trojan://password@example.com:443?security=tls&type=ws&host=example.com&path=/&encryption=none#NQServer-Trojan`
+                },
+                {
+                    name: 'Shadowsocks',
+                    icon: '🟢',
+                    link: `ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNTpwYXNzd29yZA@example.com:443?plugin=v2ray-plugin;mode=websocket;host=example.com;path=/;tls#NQServer-SS`
+                }
+            ]
+        };
+
+        // --- محاسبات ---
+        const remaining = userData.total - userData.used;
+        const percentUsed = (userData.used / userData.total) * 100;
+        const percentRemaining = 100 - percentUsed;
+
+        // --- به‌روزرسانی کارت اطلاعات ---
+        document.getElementById('used').textContent = userData.used.toFixed(1) + ' GB';
+        document.getElementById('remaining').textContent = remaining.toFixed(1) + ' GB';
+        document.getElementById('total').textContent = userData.total + ' GB';
+        document.getElementById('expiry').textContent = userData.expiryDays + ' روز';
+        document.getElementById('progressFill').style.width = percentUsed + '%';
+        document.getElementById('usedLabel').textContent = percentUsed.toFixed(1) + '% مصرف';
+        document.getElementById('remainingLabel').textContent = percentRemaining.toFixed(1) + '% باقی‌مانده';
+
+        // --- به‌روزرسانی لینک اشتراک ---
+        document.getElementById('subLink').value = window.location.href;
+
+        // --- ساخت کارت‌های کانفیگ ---
+        const container = document.getElementById('configsContainer');
+        userData.configs.forEach(config => {
+            const card = document.createElement('div');
+            card.className = 'config-card';
+
+            // ساخت QR کد (با استفاده از API رایگان)
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(config.link)}`;
+
+            card.innerHTML = `
+                <div class="title">${config.icon} ${config.name}</div>
+                <div class="qr">
+                    <img src="${qrUrl}" alt="QR Code">
+                </div>
+                <div class="btn-group">
+                    <button onclick="copyConfig('${config.link}')" class="copy-btn">کپی کانفیگ</button>
+                    <button onclick="addConfig('${config.link}')">افزودن به اپ</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // --- توابع کمکی ---
+        function copySubLink() {
+            const input = document.getElementById('subLink');
+            input.select();
+            document.execCommand('copy');
+            alert('لینک اشتراک کپی شد!');
+        }
+
+        function copyConfig(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert('کانفیگ کپی شد!');
+            });
+        }
+
+        function addConfig(link) {
+            // این تابع می‌تونه لینک رو به صورت خودکار باز کنه تا کلاینت نصب کنه
+            window.open(link, '_blank');
+        }
+
+        function toggleLang() {
+            // اینجا می‌تونی زبان رو تغییر بدی
+            alert('قابلیت تغییر زبان در نسخه بعدی اضافه خواهد شد.');
+        }
+    </script>
+</body>
+</html>
