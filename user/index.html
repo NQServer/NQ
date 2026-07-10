@@ -65,28 +65,19 @@
   .sublink{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);padding:11px 14px;margin-bottom:22px}
   .sublink code{flex:1;min-width:0;font-family:ui-monospace,'SF Mono',monospace;font-size:11.5px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left}
   
-  /* ===== بخش لینک توکن کاربر ===== */
-  .user-token-link{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--ac-line);border-radius:var(--radius);padding:11px 14px;margin-bottom:22px}
-  .user-token-link .info{flex:1;min-width:0}
-  .user-token-link .info .label{font-size:12px;font-weight:700;color:var(--ac);display:flex;align-items:center;gap:6px}
-  .user-token-link .info code{display:block;font-family:ui-monospace,'SF Mono',monospace;font-size:11px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:left;margin-top:3px}
-  .user-token-link .info .hint{font-size:10.5px;color:var(--mu);margin-top:2px}
-  .user-token-link .btn{flex-shrink:0}
-  /* =================================== */
-
-  .config-section{margin-top:30px;margin-bottom:50px;padding:20px;background:var(--card);border:1px solid var(--bd);border-radius:var(--radius)}
-  .config-section .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px}
-  .config-section .header h3{color:var(--tx);margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
-  .config-section .header .copy-all-btn{background:var(--ok);color:#fff;border:none;padding:6px 16px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;font-weight:600;transition:.15s;display:flex;align-items:center;gap:6px}
-  .config-section .header .copy-all-btn:hover{filter:brightness(1.1)}
-  .config-section .header .copy-all-btn.copied{background:var(--ac)}
-  .config-list{max-height:420px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11.5px;background:var(--card2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--bd);white-space:pre-wrap;word-break:break-all;color:var(--tx2);line-height:2;direction:ltr;text-align:left}
-  .config-list::-webkit-scrollbar{width:6px;height:6px}
-  .config-list::-webkit-scrollbar-track{background:var(--card2);border-radius:4px}
-  .config-list::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:4px}
-  .config-list::-webkit-scrollbar-thumb:hover{background:var(--mu)}
-  .config-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--mu)}
-  .config-stats span strong{color:var(--tx)}
+.config-section{margin-top:30px;margin-bottom:50px;padding:20px;background:var(--card);border:1px solid var(--bd);border-radius:var(--radius)}
+.config-section .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.config-section .header h3{color:var(--tx);margin:0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.config-section .header .copy-all-btn{background:var(--ok);color:#fff;border:none;padding:6px 16px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;font-weight:600;transition:.15s;display:flex;align-items:center;gap:6px}
+.config-section .header .copy-all-btn:hover{filter:brightness(1.1)}
+.config-section .header .copy-all-btn.copied{background:var(--ac)}
+.config-list{max-height:420px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11.5px;background:var(--card2);border-radius:var(--r-sm);padding:14px;border:1px solid var(--bd);white-space:pre-wrap;word-break:break-all;color:var(--tx2);line-height:2;direction:ltr;text-align:left}
+.config-list::-webkit-scrollbar{width:6px;height:6px}
+.config-list::-webkit-scrollbar-track{background:var(--card2);border-radius:4px}
+.config-list::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:4px}
+.config-list::-webkit-scrollbar-thumb:hover{background:var(--mu)}
+.config-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--mu)}
+.config-stats span strong{color:var(--tx)}
 
   .appgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px;margin-top:20px}
   .appcard{border:1px solid var(--bd);border-radius:12px;padding:14px;background:var(--card2);display:flex;flex-direction:column;gap:13px}
@@ -128,8 +119,6 @@
     .usage-top{gap:16px}
     .config-list{font-size:10px;padding:10px}
     .config-section .header h3{font-size:14px}
-    .user-token-link{flex-wrap:wrap}
-    .user-token-link .btn{width:100%}
   }
 </style>
 </head>
@@ -161,24 +150,12 @@
       <div class="usplit" id="u-split"></div>
     </section>
 
-    <!-- ===== لینک اشتراک معمولی (با b64) ===== -->
     <div class="sublink">
       <button class="btn ghost sm" id="copyraw"></button>
       <code id="rawsub">…</code>
     </div>
 
-    <!-- ===== بخش لینک توکن کاربر (برای همه اپ‌ها) ===== -->
-    <div class="user-token-link" id="userTokenLink" style="display:none;">
-      <div class="info">
-        <div class="label">🔑 لینک اشتراک شما (همه اپ‌ها)</div>
-        <code id="userTokenSubLink">…</code>
-        <div class="hint">✅ قابل استفاده در: V2rayNG, Nekobox, Hiddify, Streisand, Clash, Sing-box</div>
-      </div>
-      <button class="btn ghost sm" onclick="copyUserTokenLink()">📋 کپی</button>
-    </div>
-    <!-- =================================== -->
-
-    <!-- ===== بخش کانفیگ‌های تکی ===== -->
+    <!-- ===== بخش جدید: کانفیگ‌های تکی ===== -->
     <section class="config-section" id="config-section">
       <div class="header">
         <h3>📋 <span id="config-title">کانفیگ‌های تکی (Single Configs)</span></h3>
@@ -203,14 +180,13 @@
   <script>
   (function(){
     var I18N = {
-      en: { brandsub:'configs', subtitle:'Pick your app, scan the QR or tap Add. Same servers in every app.', sub_user:'Configs for ', copy:'Copy', copied:'Copied', copyraw:'Copy subscription link', add:'Add to app', scanhint:'or scan this in your app', qmiss:'QR unavailable', foot:'Powered by NQServer', used:'Used', total:'Limit', expires:'Expires', unlimited:'Unlimited', noexpiry:'No expiry', expired:'Expired', days:'d left', today:'today', up:'Up', down:'Down', remaining:'left', config_title:'Single Configs', copy_all:'Copy All', user_token_label:'Your subscription link (all apps)' },
-      fa: { brandsub:'کانفیگ‌ها', subtitle:'اپ خود را انتخاب کن، QR را اسکن کن یا روی «افزودن» بزن. سرورها در همه‌ی اپ‌ها یکی است.', sub_user:'کانفیگ‌های ', copy:'کپی', copied:'کپی شد', copyraw:'کپی لینک اشتراک', add:'افزودن به اپ', scanhint:'یا این را در اپ خود اسکن کن', qmiss:'QR در دسترس نیست', foot:'قدرت‌گرفته از NQServer', used:'مصرف‌شده', total:'حجم کل', expires:'انقضا', unlimited:'نامحدود', noexpiry:'بدون انقضا', expired:'منقضی شده', days:'روز مانده', today:'امروز', up:'آپلود', down:'دانلود', remaining:'باقی‌مانده', config_title:'کانفیگ‌های تکی (Single Configs)', copy_all:'کپی همه', user_token_label:'لینک اشتراک شما (همه اپ‌ها)' }
+      en: { brandsub:'configs', subtitle:'Pick your app, scan the QR or tap Add. Same servers in every app.', sub_user:'Configs for ', copy:'Copy', copied:'Copied', copyraw:'Copy subscription link', add:'Add to app', scanhint:'or scan this in your app', qmiss:'QR unavailable', foot:'Powered by NQServer', used:'Used', total:'Limit', expires:'Expires', unlimited:'Unlimited', noexpiry:'No expiry', expired:'Expired', days:'d left', today:'today', up:'Up', down:'Down', remaining:'left', config_title:'Single Configs', copy_all:'Copy All' },
+      fa: { brandsub:'کانفیگ‌ها', subtitle:'اپ خود را انتخاب کن، QR را اسکن کن یا روی «افزودن» بزن. سرورها در همه‌ی اپ‌ها یکی است.', sub_user:'کانفیگ‌های ', copy:'کپی', copied:'کپی شد', copyraw:'کپی لینک اشتراک', add:'افزودن به اپ', scanhint:'یا این را در اپ خود اسکن کن', qmiss:'QR در دسترس نیست', foot:'قدرت‌گرفته از NQServer', used:'مصرف‌شده', total:'حجم کل', expires:'انقضا', unlimited:'نامحدود', noexpiry:'بدون انقضا', expired:'منقضی شده', days:'روز مانده', today:'امروز', up:'آپلود', down:'دانلود', remaining:'باقی‌مانده', config_title:'کانفیگ‌های تکی (Single Configs)', copy_all:'کپی همه' }
     };
     var lang = (function(){ try{ return localStorage.getItem('nqserver-user-lang')||'fa'; }catch(e){ return 'fa'; } })();
     var theme = document.documentElement.dataset.theme==='light' ? 'light' : 'dark';
     var USAGE = null;
     var CONFIG_LINKS = [];
-    var USER_TOKEN_LINK = null;
 
     function subFor(fmt){
       var u = new URL(location.href);
@@ -237,58 +213,19 @@
     function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
     function fmtBytes(n){ n=Number(n)||0; if(n<=0) return '0 GB'; var u=['B','KB','MB','GB','TB','PB']; var i=Math.floor(Math.log(n)/Math.log(1024)); i=Math.max(0,Math.min(i,u.length-1)); var v=n/Math.pow(1024,i); return (v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2))+' '+u[i]; }
 
-    // ===== دریافت لینک توکن کاربر =====
-    function getUserTokenLink(){
-      var u = new URL(location.href);
-      var token = u.searchParams.get('token');
-      var sub = u.searchParams.get('sub');
-      var key = u.searchParams.get('key');
-      
-      if (token) {
-        return location.protocol + '//' + location.host + '/sub?token=' + token;
-      } else if (sub && key) {
-        return location.protocol + '//' + location.host + '/sub?sub=' + sub + '&key=' + key;
-      }
-      return null;
-    }
-
-    // ===== کپی لینک توکن کاربر =====
-    function copyUserTokenLink(){
-      if (!USER_TOKEN_LINK) {
-        toast('⚠️ لینک در دسترس نیست');
-        return;
-      }
-      copy(USER_TOKEN_LINK);
-    }
-
-    // ===== نمایش لینک توکن کاربر =====
-    function renderUserTokenLink(){
-      var el = document.getElementById('userTokenLink');
-      var codeEl = document.getElementById('userTokenSubLink');
-      var t = I18N[lang];
-      
-      document.querySelector('#userTokenLink .label').textContent = t.user_token_label;
-      
-      USER_TOKEN_LINK = getUserTokenLink();
-      
-      if (USER_TOKEN_LINK) {
-        codeEl.textContent = USER_TOKEN_LINK;
-        el.style.display = 'flex';
-      } else {
-        el.style.display = 'none';
-      }
-    }
-
     // ===== دریافت کانفیگ‌های تکی =====
     async function loadConfigs(){
       try{
         var r = await fetch(subFor('b64'), { cache:'no-store' });
         var text = await r.text();
+        // تلاش برای دیکد کردن Base64
         try {
           var decoded = atob(text);
+          // استخراج لینک‌های vless://
           var links = decoded.match(/vless:\/\/[^\s]+/g) || [];
           CONFIG_LINKS = links;
         } catch(e) {
+          // اگه Base64 نبود، مستقیم لینک‌ها رو استخراج کن
           var links2 = text.match(/vless:\/\/[^\s]+/g) || [];
           CONFIG_LINKS = links2;
         }
@@ -387,9 +324,6 @@
       var rawUrl = subFor('b64');
       document.getElementById('rawsub').textContent = rawUrl;
       var cr = document.getElementById('copyraw'); cr.textContent = t.copyraw; cr.onclick=function(){ copy(rawUrl); };
-
-      // نمایش لینک توکن کاربر
-      renderUserTokenLink();
 
       var grid = document.getElementById('grid'); grid.innerHTML='';
       CLIENTS.forEach(function(c){
