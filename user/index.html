@@ -2,13 +2,14 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>NQServer • Configurations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>NQServer • Subscription</title>
   <meta name="nqserver-userhub-version" content="2.0.0" />
   <link rel="icon" type="image/svg+xml" href="https://nqserver.github.io/NQ/logo-mark.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Vazirmatn:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script>
     (function(){
       try {
@@ -21,9 +22,7 @@
     })();
   </script>
   <style>
-    /* ============ DESIGN SYSTEM (Rebuilt from ground up) ============ */
     :root {
-      /* Dark theme (default) - Inspired by modern dev tools & dashboards */
       --bg-root: #090a0f;
       --bg-surface: #111318;
       --bg-elevated: #161920;
@@ -42,10 +41,40 @@
       --gradient-card-border: linear-gradient(145deg, rgba(56, 189, 248, 0.4), rgba(167, 139, 250, 0.4));
       --shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
       --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.15);
+      
+      --fs-xl: 22px;
+      --fs-lg: 20px;
+      --fs-md: 16px;
+      --fs-base: 15px;
+      --fs-sm: 14px;
+      --fs-xs: 13px;
+      --fs-xxs: 12px;
+      --fs-tiny: 11px;
+      
+      --sp-2xl: 28px;
+      --sp-xl: 24px;
+      --sp-lg: 20px;
+      --sp-md: 16px;
+      --sp-sm: 14px;
+      --sp-xs: 12px;
+      --sp-xxs: 8px;
+      
+      --logo-size: 52px;
+      --logo-img: 34px;
+      --icon-lg: 22px;
+      --icon-md: 18px;
+      --icon-sm: 14px;
+      --icon-xs: 12px;
+      --btn-padding: 12px 24px;
+      --btn-height: 44px;
+      --app-icon-size: 40px;
+      --qr-size: 130px;
+      
       --radius-xl: 24px;
       --radius-lg: 18px;
       --radius-md: 14px;
       --radius-sm: 10px;
+      
       --font-sans: 'Inter', 'Vazirmatn', system-ui, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
@@ -66,51 +95,157 @@
       --shadow-lg: 0 20px 50px -12px rgba(0,0,0,0.1);
     }
 
+    @media (max-width: 768px) {
+      :root {
+        --fs-xl: 19px;
+        --fs-lg: 17px;
+        --fs-md: 15px;
+        --fs-base: 14px;
+        --fs-sm: 13px;
+        --fs-xs: 12px;
+        --fs-xxs: 11px;
+        --fs-tiny: 10px;
+        
+        --sp-2xl: 22px;
+        --sp-xl: 18px;
+        --sp-lg: 16px;
+        --sp-md: 14px;
+        --sp-sm: 12px;
+        --sp-xs: 10px;
+        --sp-xxs: 6px;
+        
+        --logo-size: 44px;
+        --logo-img: 28px;
+        --icon-lg: 20px;
+        --icon-md: 16px;
+        --icon-sm: 13px;
+        --icon-xs: 11px;
+        --btn-padding: 10px 20px;
+        --btn-height: 40px;
+        --app-icon-size: 36px;
+        --qr-size: 120px;
+        
+        --radius-xl: 20px;
+        --radius-lg: 16px;
+        --radius-md: 12px;
+        --radius-sm: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --fs-xl: 16px;
+        --fs-lg: 14px;
+        --fs-md: 13px;
+        --fs-base: 12px;
+        --fs-sm: 11px;
+        --fs-xs: 10px;
+        --fs-xxs: 9px;
+        --fs-tiny: 8px;
+        
+        --sp-2xl: 16px;
+        --sp-xl: 14px;
+        --sp-lg: 12px;
+        --sp-md: 10px;
+        --sp-sm: 8px;
+        --sp-xs: 7px;
+        --sp-xxs: 4px;
+        
+        --logo-size: 36px;
+        --logo-img: 24px;
+        --icon-lg: 16px;
+        --icon-md: 13px;
+        --icon-sm: 11px;
+        --icon-xs: 9px;
+        --btn-padding: 7px 14px;
+        --btn-height: 34px;
+        --app-icon-size: 30px;
+        --qr-size: 100px;
+        
+        --radius-xl: 14px;
+        --radius-lg: 12px;
+        --radius-md: 10px;
+        --radius-sm: 7px;
+      }
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
     body {
       background: var(--bg-root);
       color: var(--text-primary);
       font-family: var(--font-sans);
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: var(--fs-base);
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
+      min-height: 100dvh;
     }
     html[dir="rtl"] body { font-family: 'Vazirmatn', 'Inter', system-ui, sans-serif; }
 
-    /* ============ LAYOUT ============ */
+    .lucide {
+      width: var(--icon-md);
+      height: var(--icon-md);
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+    .lucide-sm { width: var(--icon-sm); height: var(--icon-sm); }
+    .lucide-lg { width: var(--icon-lg); height: var(--icon-lg); }
+    .lucide-xs { width: var(--icon-xs); height: var(--icon-xs); }
+
     .app-shell {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 20px 24px 60px;
+      padding: var(--sp-lg) var(--sp-xl) 50px;
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: var(--sp-lg);
+    }
+    @media (max-width: 480px) {
+      .app-shell { 
+        padding: var(--sp-sm) var(--sp-xs) 30px; 
+        gap: var(--sp-md);
+      }
     }
 
-    /* ============ MASTHEAD (new design) ============ */
     .masthead {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: var(--sp-md);
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-xl);
-      padding: 16px 24px;
+      padding: var(--sp-sm) var(--sp-lg);
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       flex-wrap: wrap;
+    }
+    @media (max-width: 640px) {
+      .masthead { 
+        flex-direction: column; 
+        align-items: stretch; 
+        padding: var(--sp-xs);
+        gap: var(--sp-xs);
+      }
+    }
+    @media (max-width: 480px) {
+      .masthead { 
+        padding: var(--sp-xxs);
+        border-radius: var(--radius-lg);
+      }
     }
     .brand-block {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: var(--sp-xs);
+    }
+    @media (max-width: 480px) {
+      .brand-block { gap: var(--sp-xxs); }
     }
     .brand-mark {
-      width: 52px;
-      height: 52px;
+      width: var(--logo-size);
+      height: var(--logo-size);
       background: var(--bg-elevated);
       border-radius: var(--radius-md);
       display: flex;
@@ -119,6 +254,7 @@
       border: 1px solid var(--border-default);
       position: relative;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .brand-mark::after {
       content: '';
@@ -128,46 +264,79 @@
       opacity: 0.15;
     }
     .brand-mark img {
-      width: 34px;
-      height: 34px;
+      width: var(--logo-img);
+      height: var(--logo-img);
       position: relative;
       z-index: 2;
     }
     .brand-info h1 {
-      font-size: 22px;
+      font-size: var(--fs-xl);
       font-weight: 800;
       letter-spacing: -0.5px;
       background: var(--gradient-hero);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      line-height: 1.1;
     }
     .brand-info .tagline {
-      font-size: 12px;
+      font-size: var(--fs-tiny);
       color: var(--text-tertiary);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 1px;
+    }
+    .controls-row {
+      display: flex;
+      gap: var(--sp-xxs);
+      flex-wrap: wrap;
+    }
+    @media (max-width: 640px) {
+      .controls-row { 
+        width: 100%; 
+        justify-content: space-between;
+      }
     }
     .toolbar {
       display: flex;
-      gap: 8px;
+      gap: 1px;
       background: var(--bg-elevated);
-      padding: 5px;
+      padding: 3px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-default);
+    }
+    @media (max-width: 480px) {
+      .toolbar { flex: 1; padding: 2px; }
     }
     .toolbar-btn {
       border: none;
       background: transparent;
-      padding: 10px 18px;
-      border-radius: 8px;
+      padding: var(--sp-xs) var(--sp-sm);
+      border-radius: 5px;
       font-family: var(--font-sans);
       font-weight: 700;
-      font-size: 13px;
+      font-size: var(--fs-xs);
       color: var(--text-secondary);
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+      min-height: 32px;
+    }
+    @media (max-width: 480px) {
+      .toolbar-btn { 
+        padding: 5px 8px; 
+        font-size: var(--fs-xxs);
+        flex: 1;
+        justify-content: center;
+        min-height: 28px;
+      }
     }
     .toolbar-btn.active {
       background: var(--accent-primary);
@@ -176,62 +345,95 @@
     }
     html[data-theme="light"] .toolbar-btn.active { color: #fff; }
 
-    /* ============ HERO TEXT ============ */
     .hero-text {
-      font-size: 16px;
+      font-size: var(--fs-sm);
       color: var(--text-secondary);
       text-align: center;
-      max-width: 700px;
+      max-width: 650px;
       margin: 0 auto;
-      line-height: 1.8;
+      line-height: 1.7;
+      padding: 0 var(--sp-sm);
+    }
+    @media (max-width: 480px) {
+      .hero-text { 
+        font-size: var(--fs-xxs); 
+        line-height: 1.6;
+        padding: 0;
+      }
     }
     .hero-text strong {
       color: var(--accent-primary);
       font-weight: 800;
     }
 
-    /* ============ DASHBOARD CARD (Usage) ============ */
     .dashboard-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-xl);
-      padding: 24px;
+      padding: var(--sp-lg);
       display: none;
       box-shadow: 0 8px 30px rgba(0,0,0,0.3);
       transition: all 0.3s;
     }
+    @media (max-width: 480px) {
+      .dashboard-card { padding: var(--sp-sm); }
+    }
     .dashboard-card.visible { display: block; }
     .metrics-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: var(--sp-sm);
+      margin-bottom: var(--sp-sm);
+    }
+    @media (max-width: 480px) {
+      .metrics-row { 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: var(--sp-xxs); 
+        margin-bottom: var(--sp-xs);
+      }
     }
     .metric-box {
       background: var(--bg-elevated);
       border-radius: var(--radius-md);
-      padding: 16px;
+      padding: var(--sp-sm);
       border: 1px solid var(--border-default);
     }
+    @media (max-width: 480px) {
+      .metric-box { padding: var(--sp-xs); }
+    }
     .metric-label {
-      font-size: 11px;
+      font-size: var(--fs-tiny);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
       color: var(--text-tertiary);
-      margin-bottom: 8px;
+      margin-bottom: var(--sp-xxs);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    @media (max-width: 480px) {
+      .metric-label { font-size: 7px; letter-spacing: 0.3px; }
     }
     .metric-value {
-      font-size: 22px;
+      font-size: var(--fs-lg);
       font-weight: 800;
       color: var(--text-primary);
       font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+    @media (max-width: 480px) {
+      .metric-value { font-size: var(--fs-sm); }
     }
     .progress-track {
-      height: 6px;
+      height: 5px;
       background: var(--bg-overlay);
       border-radius: 10px;
-      margin: 14px 0;
+      margin: var(--sp-xs) 0;
+      overflow: hidden;
+    }
+    @media (max-width: 480px) {
+      .progress-track { height: 3px; margin: var(--sp-xxs) 0; }
     }
     .progress-thumb {
       height: 100%;
@@ -240,46 +442,91 @@
       width: 0%;
       transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    .traffic-info {
+      font-size: var(--fs-xs);
+      color: var(--text-tertiary);
+      display: flex;
+      gap: var(--sp-sm);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    @media (max-width: 480px) {
+      .traffic-info { 
+        font-size: 8px; 
+        gap: var(--sp-xxs);
+      }
+    }
+    .traffic-info .icon-text {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
 
-    /* ============ SUBSCRIPTION STRIP ============ */
     .sub-strip {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
-      padding: 12px 20px;
+      padding: var(--sp-xs) var(--sp-md);
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: var(--sp-xs);
+    }
+    @media (max-width: 480px) {
+      .sub-strip { 
+        flex-direction: column; 
+        padding: var(--sp-xxs); 
+        gap: var(--sp-xxs);
+        border-radius: var(--radius-md);
+      }
     }
     .sub-strip code {
       flex: 1;
       font-family: var(--font-mono);
-      font-size: 13px;
+      font-size: var(--fs-xs);
       color: var(--text-secondary);
       direction: ltr;
       text-align: left;
       background: var(--bg-elevated);
-      padding: 12px 16px;
+      padding: var(--sp-xs) var(--sp-sm);
       border-radius: var(--radius-sm);
       overflow-x: auto;
       white-space: nowrap;
       border: 1px solid var(--border-default);
+      min-width: 0;
+    }
+    @media (max-width: 480px) {
+      .sub-strip code { 
+        width: 100%; 
+        font-size: 9px;
+        padding: var(--sp-xxs) var(--sp-xs);
+      }
     }
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 24px;
+      justify-content: center;
+      gap: var(--sp-xxs);
+      padding: var(--btn-padding);
+      height: var(--btn-height);
       border-radius: var(--radius-sm);
       font-family: var(--font-sans);
       font-weight: 700;
-      font-size: 14px;
+      font-size: var(--fs-sm);
       cursor: pointer;
       transition: all 0.2s;
       border: 1px solid transparent;
       background: var(--bg-elevated);
       color: var(--text-primary);
       white-space: nowrap;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    @media (max-width: 480px) {
+      .btn { 
+        width: 100%; 
+        font-size: var(--fs-xxs);
+      }
     }
     .btn-primary {
       background: var(--accent-primary);
@@ -287,181 +534,330 @@
       border: none;
       font-weight: 800;
     }
-    .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.96); }
+    .btn-outline {
+      border-color: var(--border-emphasis);
+      background: transparent;
+    }
+    .btn-outline:active { background: var(--bg-overlay); }
 
-    /* ============ CONFIG SECTION ============ */
     .config-section {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-xl);
       overflow: hidden;
     }
+    @media (max-width: 480px) {
+      .config-section { border-radius: var(--radius-lg); }
+    }
     .config-section-header {
-      padding: 20px 24px;
+      padding: var(--sp-md) var(--sp-lg);
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-default);
+      gap: var(--sp-xs);
+      flex-wrap: wrap;
+    }
+    @media (max-width: 480px) {
+      .config-section-header { 
+        padding: var(--sp-xs) var(--sp-sm); 
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
     .config-section-header h2 {
-      font-size: 20px;
+      font-size: var(--fs-md);
       font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-xs);
+    }
+    @media (max-width: 480px) {
+      .config-section-header h2 { font-size: var(--fs-sm); }
     }
     .config-list {
-      max-height: 400px;
+      max-height: 380px;
       overflow-y: auto;
-      padding: 20px;
+      padding: var(--sp-md);
       font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 2;
+      font-size: var(--fs-xs);
+      line-height: 1.9;
       color: var(--text-secondary);
       background: var(--bg-elevated);
       direction: ltr;
       text-align: left;
       white-space: pre-wrap;
+      word-break: break-all;
+      -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 480px) {
+      .config-list { 
+        max-height: 250px; 
+        padding: var(--sp-xs); 
+        font-size: 9px;
+        line-height: 1.7;
+      }
     }
     .config-footer {
-      padding: 14px 24px;
+      padding: var(--sp-xs) var(--sp-lg);
       border-top: 1px solid var(--border-default);
       display: flex;
-      gap: 24px;
+      gap: var(--sp-sm);
       color: var(--text-tertiary);
-      font-size: 13px;
+      font-size: var(--fs-xs);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 480px) {
+      .config-footer { 
+        padding: var(--sp-xxs) var(--sp-xs); 
+        font-size: 8px;
+        gap: var(--sp-xxs);
+      }
+    }
+    .config-footer .icon-text {
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
 
-    /* ============ APPS GRID ============ */
     .apps-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--sp-md);
+    }
+    @media (max-width: 600px) {
+      .apps-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: var(--sp-xs);
+      }
+    }
+    @media (max-width: 380px) {
+      .apps-grid { 
+        grid-template-columns: 1fr; 
+      }
     }
     .app-tile {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-lg);
-      padding: 20px;
+      padding: var(--sp-md);
       transition: 0.2s;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: var(--sp-xs);
     }
+    @media (max-width: 480px) {
+      .app-tile { 
+        padding: var(--sp-xs); 
+        gap: var(--sp-xxs);
+        border-radius: var(--radius-md);
+      }
+    }
+    .app-tile:active { transform: scale(0.97); }
     .app-tile.featured {
-      border-image: var(--gradient-card-border) 1;
+      border-color: var(--accent-primary);
       box-shadow: var(--shadow-glow);
     }
     .app-tile-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--sp-xs);
+    }
+    @media (max-width: 480px) {
+      .app-tile-header { gap: var(--sp-xxs); }
     }
     .app-tile-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: var(--app-icon-size);
+      height: var(--app-icon-size);
+      border-radius: 8px;
       background: var(--bg-elevated);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
       color: #fff;
-      font-size: 18px;
+      flex-shrink: 0;
+    }
+    @media (max-width: 480px) {
+      .app-tile-icon { border-radius: 6px; }
+    }
+    .app-tile-header strong {
+      font-size: var(--fs-sm);
+      font-weight: 700;
+    }
+    @media (max-width: 480px) {
+      .app-tile-header strong { font-size: var(--fs-xxs); }
     }
     .qr-container {
       display: flex;
       justify-content: center;
       background: #fff;
-      border-radius: 12px;
-      padding: 8px;
+      border-radius: var(--radius-sm);
+      padding: var(--sp-xxs);
+    }
+    @media (max-width: 480px) {
+      .qr-container { padding: 4px; border-radius: 6px; }
+    }
+    .qr-target {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .action-stack {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--sp-xxs);
+    }
+    @media (max-width: 480px) {
+      .action-stack { gap: 4px; }
     }
 
-    /* ============ TOAST ============ */
     .toast {
       position: fixed;
-      bottom: 30px;
+      bottom: 16px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--accent-primary);
       color: #0a0f1a;
       font-weight: 700;
-      padding: 12px 28px;
+      padding: var(--sp-xs) var(--sp-lg);
       border-radius: 100px;
-      z-index: 999;
+      z-index: 9999;
       opacity: 0;
       transition: opacity 0.2s;
       pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-xxs);
+      font-size: var(--fs-sm);
+      max-width: 85vw;
+      white-space: nowrap;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 480px) {
+      .toast { 
+        font-size: var(--fs-xxs); 
+        padding: 6px 14px;
+        bottom: 12px;
+        max-width: 80vw;
+      }
     }
     .toast.show { opacity: 1; }
 
-    @media (max-width: 640px) {
-      .app-shell { padding: 16px; }
-      .masthead { flex-direction: column; align-items: flex-start; }
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-emphasis); border-radius: 10px; }
+    @media (max-width: 480px) {
+      ::-webkit-scrollbar { width: 2px; }
+    }
+
+    .btn:focus-visible, .toolbar-btn:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
     }
   </style>
 </head>
 <body>
 <div class="app-shell">
   
-  <!-- Masthead -->
   <header class="masthead">
     <div class="brand-block">
       <div class="brand-mark"><img src="https://nqserver.github.io/NQ/logo-mark.svg" alt="NQServer" /></div>
       <div class="brand-info">
         <h1>NQServer</h1>
-        <div class="tagline" id="brand-tagline">Configurations</div>
+        <div class="tagline">
+          <i data-lucide="zap" class="lucide lucide-xs"></i>
+          <span id="brand-tagline">Configurations</span>
+        </div>
       </div>
     </div>
-    <div class="toolbar" id="lang-toolbar">
-      <button class="toolbar-btn" data-lang="en">English</button>
-      <button class="toolbar-btn" data-lang="fa">فارسی</button>
-    </div>
-    <div class="toolbar" id="theme-toolbar">
-      <button class="toolbar-btn" data-theme="light">☀️ Light</button>
-      <button class="toolbar-btn" data-theme="dark">🌙 Dark</button>
+    <div class="controls-row">
+      <div class="toolbar" id="lang-toolbar">
+        <button class="toolbar-btn" data-lang="en">
+          <i data-lucide="globe" class="lucide lucide-xs"></i> <span>EN</span>
+        </button>
+        <button class="toolbar-btn" data-lang="fa">
+          <i data-lucide="globe" class="lucide lucide-xs"></i> <span>فا</span>
+        </button>
+      </div>
+      <div class="toolbar" id="theme-toolbar">
+        <button class="toolbar-btn" data-theme="light">
+          <i data-lucide="sun" class="lucide lucide-xs"></i>
+        </button>
+        <button class="toolbar-btn" data-theme="dark">
+          <i data-lucide="moon" class="lucide lucide-xs"></i>
+        </button>
+      </div>
     </div>
   </header>
 
   <p class="hero-text" id="hero-description"></p>
 
-  <!-- Usage Dashboard -->
   <div class="dashboard-card" id="usage-dashboard">
     <div class="metrics-row">
-      <div class="metric-box"><div class="metric-label" id="lbl-used">Used</div><div class="metric-value" id="val-used">-</div></div>
-      <div class="metric-box"><div class="metric-label" id="lbl-total">Total</div><div class="metric-value" id="val-total">-</div></div>
-      <div class="metric-box"><div class="metric-label" id="lbl-expiry">Expires</div><div class="metric-value" id="val-expiry">-</div></div>
+      <div class="metric-box">
+        <div class="metric-label">
+          <i data-lucide="hard-drive" class="lucide lucide-xs"></i>
+          <span id="lbl-used">Used</span>
+        </div>
+        <div class="metric-value" id="val-used">-</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">
+          <i data-lucide="database" class="lucide lucide-xs"></i>
+          <span id="lbl-total">Total</span>
+        </div>
+        <div class="metric-value" id="val-total">-</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">
+          <i data-lucide="calendar-clock" class="lucide lucide-xs"></i>
+          <span id="lbl-expiry">Expires</span>
+        </div>
+        <div class="metric-value" id="val-expiry">-</div>
+      </div>
     </div>
     <div class="progress-track"><div class="progress-thumb" id="progress-thumb"></div></div>
-    <div style="font-size:13px; color: var(--text-tertiary);" id="traffic-detail"></div>
+    <div class="traffic-info" id="traffic-detail"></div>
   </div>
 
-  <!-- Subscription Link -->
   <div class="sub-strip">
     <code id="subscription-code">...</code>
-    <button class="btn" id="copy-subscription">📋 Copy</button>
+    <button class="btn btn-outline" id="copy-subscription">
+      <i data-lucide="copy" class="lucide lucide-xs"></i> <span id="copy-sub-text">Copy</span>
+    </button>
   </div>
 
-  <!-- Individual Configs -->
   <div class="config-section">
     <div class="config-section-header">
-      <h2>🔗 <span id="config-heading">Single Configs</span></h2>
-      <button class="btn btn-primary" id="copy-all-btn">📋 Copy All</button>
+      <h2>
+        <i data-lucide="terminal" class="lucide"></i>
+        <span id="config-heading">Single Configs</span>
+      </h2>
+      <button class="btn btn-primary" id="copy-all-btn">
+        <i data-lucide="copy-check" class="lucide lucide-xs"></i> <span id="copy-all-text">Copy All</span>
+      </button>
     </div>
     <div class="config-list" id="config-text">Loading…</div>
     <div class="config-footer">
-      <span>📊 <strong id="config-count-display">0</strong> VLESS URIs</span>
-      <span>⚡ Ready for import</span>
+      <div class="icon-text">
+        <i data-lucide="files" class="lucide lucide-xs"></i>
+        <span><strong id="config-count-display">0</strong> VLESS URIs</span>
+      </div>
+      <div class="icon-text">
+        <i data-lucide="check-circle-2" class="lucide lucide-xs"></i>
+        <span>Ready for import</span>
+      </div>
     </div>
   </div>
-
-  <!-- Apps Grid -->
   <div class="apps-grid" id="apps-container"></div>
 
 </div>
-<div class="toast" id="global-toast"></div>
+<div class="toast" id="global-toast">
+  <i data-lucide="check-circle" class="lucide lucide-xs"></i>
+  <span id="toast-text">Copied!</span>
+</div>
 
 <script src="https://nqserver.github.io/NQ/qrcode.min.js"></script>
 <script>
@@ -472,8 +868,10 @@
         used: 'Used', total: 'Total', expires: 'Expires', unlimited: 'Unlimited',
         noExpiry: 'No expiry', expired: 'Expired', daysLeft: 'd left',
         up: 'Upload', down: 'Download', remaining: 'Remaining',
-        configTitle: 'Individual Configs', copyAll: 'Copy All', copySub: 'Copy',
-        copied: 'Copied!', footer: 'NQServer • Secure Tunnels'
+        configTitle: 'Single Configs', copyAll: 'Copy All', copySub: 'Copy',
+        copied: 'Copied!', ready: 'Ready for import',
+        vlessCount: 'VLESS URIs', loading: 'Loading…', noConfig: 'No configs found.',
+        errorConfig: 'Error loading configs.'
       },
       fa: {
         tagline: 'کانفیگ‌ها', hero: 'کلاینت خود را انتخاب کنید، QR را اسکن یا <strong>افزودن</strong> بزنید.',
@@ -481,7 +879,9 @@
         noExpiry: 'بدون انقضا', expired: 'منقضی', daysLeft: 'روز',
         up: 'آپلود', down: 'دانلود', remaining: 'باقی‌مانده',
         configTitle: 'کانفیگ‌های تکی', copyAll: 'کپی همه', copySub: 'کپی',
-        copied: 'کپی شد!', footer: 'NQServer • تونل‌های امن'
+        copied: 'کپی شد!', ready: 'آماده ایمپورت',
+        vlessCount: 'کانفیگ VLESS', loading: 'در حال بارگذاری…', noConfig: 'کانفیگی یافت نشد.',
+        errorConfig: 'خطا در بارگذاری کانفیگ‌ها.'
       }
     };
 
@@ -491,39 +891,51 @@
     let configsList = [];
 
     const APPS = [
-      { name: 'Hiddify', color: '#7c5cff', featured: true, fmt: 'b64', deep: u => `hiddify://import/${u}` },
-      { name: 'v2rayNG', color: '#2563eb', fmt: 'b64', deep: u => `v2rayng://install-config?url=${encodeURIComponent(u)}` },
-      { name: 'Streisand', color: '#0ea5e9', fmt: 'b64', deep: u => `streisand://import/${u}` },
-      { name: 'FlClash', color: '#06b6d4', featured: true, fmt: 'clash', deep: u => `clash://install-config?url=${encodeURIComponent(u)}` },
-      { name: 'Clash Meta', color: '#10b981', fmt: 'clash', deep: u => `clash://install-config?url=${encodeURIComponent(u)}` },
-      { name: 'Karing', color: '#16a34a', fmt: 'clash', deep: u => `karing://install-config?url=${encodeURIComponent(u)}&name=NQServer` },
-      { name: 'sing-box', color: '#64748b', fmt: 'singbox', deep: u => `sing-box://import-remote-profile?url=${encodeURIComponent(u)}` },
-      { name: 'NekoBox', color: '#f59e0b', fmt: 'singbox', deep: u => `sing-box://import-remote-profile?url=${encodeURIComponent(u)}` }
+      { name: 'Hiddify', color: '#7c5cff', fmt: 'b64', deep: u => `hiddify://import/${u}`, icon: 'smartphone' },
+      { name: 'v2rayNG', color: '#2563eb', fmt: 'b64', deep: u => `v2rayng://install-config?url=${encodeURIComponent(u)}`, icon: 'radio' },
+      { name: 'Streisand', color: '#0ea5e9', fmt: 'b64', deep: u => `streisand://import/${u}`, icon: 'shield-check' },
+      { name: 'FlClash', color: '#06b6d4', fmt: 'clash', deep: u => `clash://install-config?url=${encodeURIComponent(u)}`, icon: 'zap' },
+      { name: 'Clash Meta', color: '#10b981', fmt: 'clash', deep: u => `clash://install-config?url=${encodeURIComponent(u)}`, icon: 'layers' },
+      { name: 'Karing', color: '#16a34a', fmt: 'clash', deep: u => `karing://install-config?url=${encodeURIComponent(u)}&name=NQServer`, icon: 'wifi' },
+      { name: 'sing-box', color: '#64748b', fmt: 'singbox', deep: u => `sing-box://import-remote-profile?url=${encodeURIComponent(u)}`, icon: 'package' },
+      { name: 'NekoBox', color: '#f59e0b', fmt: 'singbox', deep: u => `sing-box://import-remote-profile?url=${encodeURIComponent(u)}`, icon: 'cat' }
     ];
 
     const $ = (id) => document.getElementById(id);
-    const t = (key) => DICT[lang][key] || key;
+    const t = (key) => DICT[lang]?.[key] || DICT['en'][key] || key;
 
     function toast(msg) {
-      const el = $('global-toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 1800);
+      const toastEl = $('global-toast');
+      $('toast-text').textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._timeout);
+      toastEl._timeout = setTimeout(() => toastEl.classList.remove('show'), 1600);
     }
 
-    function copyText(text) {
-      navigator.clipboard?.writeText(text).then(() => toast(t('copied'))).catch(() => {});
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast(t('copied'));
+      } catch(e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); toast(t('copied')); } catch(_) { toast('Error'); }
+        document.body.removeChild(ta);
+      }
     }
 
     function fmtBytes(n) {
       if (!n || n <= 0) return '0 GB';
       const i = Math.floor(Math.log(n) / Math.log(1024));
-      return (n / Math.pow(1024, i)).toFixed(2) + ' ' + ['B','KB','MB','GB','TB'][i];
+      return (n / Math.pow(1024, i)).toFixed(1) + ' ' + ['B','KB','MB','GB','TB'][i];
     }
 
     function buildSub(fmt = 'b64') {
       const u = new URL(location.href);
-      ['b64','base64','clash','sb','singbox','raw'].forEach(p => u.searchParams.delete(p));
+      ['b64','base64','clash','sb','singbox','surge','quanx','loon','target','page','hub','raw'].forEach(p => u.searchParams.delete(p));
       let base = u.toString();
       return base + (base.includes('?') ? '&' : '?') + (fmt === 'b64' ? 'b64' : fmt);
     }
@@ -533,105 +945,206 @@
         const r = await fetch(buildSub('b64'), { cache: 'no-store' });
         const h = r.headers.get('Subscription-Userinfo');
         if (!h) return;
-        const d = {}; h.split(';').forEach(p => { const [k,v] = p.trim().split('='); if (k) d[k.trim()] = Number(v); });
+        const d = {}; 
+        h.split(';').forEach(p => { 
+          const [k,v] = p.trim().split('='); 
+          if (k && v) d[k.trim()] = Number(v); 
+        });
         usageInfo = {
-          up: d.upload || 0, down: d.download || 0, total: d.total || 0, expire: d.expire || 0,
-          used: (d.upload||0)+(d.download||0), unlim: !d.total || d.total >= 1099511627776000,
+          up: d.upload || 0, 
+          down: d.download || 0, 
+          total: d.total || 0, 
+          expire: d.expire || 0,
+          used: (d.upload||0)+(d.download||0), 
+          unlim: !d.total || d.total >= 1099511627776000,
           noexp: !d.expire || d.expire >= 4102300000
         };
         renderUsage();
-      } catch(e) {}
+      } catch(e) {
+        console.warn('Usage fetch failed:', e);
+      }
     }
 
     async function loadConfigs() {
+      const configEl = $('config-text');
+      configEl.textContent = t('loading');
+      
       try {
         const r = await fetch(buildSub('b64'), { cache: 'no-store' });
+        if (!r.ok) throw new Error('Network error');
         const txt = await r.text();
         let dec = txt;
         try { dec = atob(txt); } catch {}
         configsList = dec.match(/vless:\/\/[^\s]+/g) || [];
-        $('config-text').textContent = configsList.length ? configsList.join('\n') : 'No configs found.';
+        configEl.textContent = configsList.length ? configsList.join('\n') : t('noConfig');
         $('config-count-display').textContent = configsList.length;
       } catch(e) {
-        $('config-text').textContent = 'Error loading configs.';
+        configEl.textContent = t('errorConfig');
+        $('config-count-display').textContent = '0';
       }
     }
 
     function renderUsage() {
       const dash = $('usage-dashboard');
-      if (!usageInfo) { dash.classList.remove('visible'); return; }
+      if (!usageInfo) { 
+        dash.classList.remove('visible'); 
+        return; 
+      }
       dash.classList.add('visible');
+      
       $('val-used').textContent = fmtBytes(usageInfo.used);
       $('val-total').textContent = usageInfo.unlim ? t('unlimited') : fmtBytes(usageInfo.total);
+      
       const expEl = $('val-expiry');
-      if (usageInfo.noexp) expEl.textContent = t('noExpiry');
-      else {
+      if (usageInfo.noexp) {
+        expEl.textContent = t('noExpiry');
+      } else {
         const days = Math.ceil((usageInfo.expire*1000 - Date.now())/86400000);
         expEl.textContent = days < 0 ? t('expired') : `${days} ${t('daysLeft')}`;
       }
+      
       const pct = usageInfo.unlim ? 0 : Math.min(100, (usageInfo.used/usageInfo.total)*100);
       $('progress-thumb').style.width = pct + '%';
-      $('traffic-detail').innerHTML = `↑ ${t('up')}: ${fmtBytes(usageInfo.up)} &nbsp; ↓ ${t('down')}: ${fmtBytes(usageInfo.down)} ${usageInfo.unlim ? '' : '• '+t('remaining')+': '+fmtBytes(Math.max(0,usageInfo.total-usageInfo.used))}`;
+      
+      const detailEl = $('traffic-detail');
+      detailEl.innerHTML = `
+        <span class="icon-text"><i data-lucide="arrow-up-circle" class="lucide lucide-xs"></i> ${t('up')}: ${fmtBytes(usageInfo.up)}</span>
+        <span class="icon-text"><i data-lucide="arrow-down-circle" class="lucide lucide-xs"></i> ${t('down')}: ${fmtBytes(usageInfo.down)}</span>
+        ${usageInfo.unlim ? '' : `<span class="icon-text"><i data-lucide="pie-chart" class="lucide lucide-xs"></i> ${t('remaining')}: ${fmtBytes(Math.max(0,usageInfo.total-usageInfo.used))}</span>`}
+      `;
+      
+      if (window.lucide) lucide.createIcons();
     }
 
     function renderApps() {
       const grid = $('apps-container');
       grid.innerHTML = '';
+      const isMobile = window.innerWidth <= 480;
+      
       APPS.forEach(app => {
         const sub = buildSub(app.fmt);
         const tile = document.createElement('div');
-        tile.className = `app-tile ${app.featured ? 'featured' : ''}`;
+        tile.className = 'app-tile';
+        
+        const qrSize = isMobile ? 90 : 120;
+        const iconSize = isMobile ? 14 : 18;
+        
         tile.innerHTML = `
           <div class="app-tile-header">
-            <span class="app-tile-icon" style="background:${app.color}">${app.name[0]}</span>
+            <div class="app-tile-icon" style="background:${app.color}">
+              <i data-lucide="${app.icon}" style="width:${iconSize}px;height:${iconSize}px;"></i>
+            </div>
             <strong>${app.name}</strong>
           </div>
-          <div class="qr-container"><div class="qr-target" style="width:130px;height:130px;"></div></div>
+          <div class="qr-container">
+            <div class="qr-target" style="width:${qrSize}px;height:${qrSize}px;"></div>
+          </div>
           <div class="action-stack">
-            <a class="btn btn-primary" href="${app.deep(sub)}">➕ ${t('copySub')}</a>
-            <button class="btn copy-app-btn" data-url="${sub}">📋 ${t('copySub')}</button>
+            <a class="btn btn-primary" href="${app.deep(sub)}" rel="noopener">
+              <i data-lucide="plus-circle" class="lucide lucide-xs"></i> Add
+            </a>
+            <button class="btn btn-outline copy-app-btn" data-url="${sub}">
+              <i data-lucide="copy" class="lucide lucide-xs"></i> ${t('copySub')}
+            </button>
           </div>`;
         grid.appendChild(tile);
-        try { if(window.QRCode) new QRCode(tile.querySelector('.qr-target'), {text:sub, width:130, height:130}); }
-        catch(e) { tile.querySelector('.qr-target').textContent = 'QR'; }
+        
+        const qrTarget = tile.querySelector('.qr-target');
+        try {
+          if (window.QRCode) {
+            new QRCode(qrTarget, { text: sub, width: qrSize, height: qrSize, correctLevel: QRCode.CorrectLevel.M });
+          } else {
+            qrTarget.innerHTML = '<span style="color:#999;font-size:10px;display:flex;align-items:center;justify-content:center;height:100%;">QR</span>';
+          }
+        } catch(e) {
+          qrTarget.innerHTML = '<span style="color:#999;font-size:10px;">QR</span>';
+        }
       });
-      document.querySelectorAll('.copy-app-btn').forEach(b => b.addEventListener('click', e => copyText(e.target.dataset.url)));
+      
+      document.querySelectorAll('.copy-app-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          copyText(this.getAttribute('data-url'));
+        });
+      });
+      
+      if (window.lucide) lucide.createIcons();
     }
 
     function refreshUI() {
       document.documentElement.lang = lang;
       document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+      
       $('brand-tagline').textContent = t('tagline');
       $('hero-description').innerHTML = t('hero');
+      $('lbl-used').textContent = t('used');
+      $('lbl-total').textContent = t('total');
+      $('lbl-expiry').textContent = t('expires');
       $('config-heading').textContent = t('configTitle');
-      $('copy-all-btn').textContent = t('copyAll');
-      $('copy-subscription').textContent = t('copySub');
+      $('copy-all-text').textContent = t('copyAll');
+      $('copy-sub-text').textContent = t('copySub');
       $('subscription-code').textContent = buildSub('b64');
-      document.querySelectorAll('#lang-toolbar .toolbar-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
-      document.querySelectorAll('#theme-toolbar .toolbar-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+      
+      document.querySelectorAll('#lang-toolbar .toolbar-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
+      document.querySelectorAll('#theme-toolbar .toolbar-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.theme === theme);
+      });
+      
       renderUsage();
       renderApps();
+      
+      if (window.lucide) lucide.createIcons();
     }
 
-    // Events
     $('lang-toolbar').addEventListener('click', e => {
-      const btn = e.target.closest('[data-lang]'); if(!btn) return;
-      lang = btn.dataset.lang; localStorage.setItem('nqserver-user-lang', lang); refreshUI();
+      const btn = e.target.closest('[data-lang]'); 
+      if (!btn) return;
+      lang = btn.dataset.lang; 
+      try { localStorage.setItem('nqserver-user-lang', lang); } catch(_) {}
+      refreshUI();
     });
+    
     $('theme-toolbar').addEventListener('click', e => {
-      const btn = e.target.closest('[data-theme]'); if(!btn) return;
-      theme = btn.dataset.theme; document.documentElement.dataset.theme = theme;
-      localStorage.setItem('nqserver-theme', theme);
+      const btn = e.target.closest('[data-theme]'); 
+      if (!btn) return;
+      theme = btn.dataset.theme; 
+      document.documentElement.dataset.theme = theme;
+      try { localStorage.setItem('nqserver-theme', theme); } catch(_) {}
     });
+    
     $('copy-subscription').addEventListener('click', () => copyText(buildSub('b64')));
+    
     $('copy-all-btn').addEventListener('click', () => {
-      if(configsList.length) copyText(configsList.join('\n')); else toast('No configs');
+      if (configsList.length) {
+        copyText(configsList.join('\n'));
+      } else {
+        toast(t('noConfig'));
+      }
     });
 
-    // Init
-    refreshUI();
-    loadUsage();
-    loadConfigs();
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => renderApps(), 200);
+    });
+
+    if (!window.QRCode) {
+      let attempts = 0;
+      const checkQR = setInterval(() => {
+        if (window.QRCode || ++attempts > 30) {
+          clearInterval(checkQR);
+          refreshUI();
+          loadUsage();
+          loadConfigs();
+        }
+      }, 150);
+    } else {
+      refreshUI();
+      loadUsage();
+      loadConfigs();
+    }
   })();
 </script>
 </body>
