@@ -22,9 +22,7 @@
     })();
   </script>
   <style>
-    /* ============ DESIGN SYSTEM - FULL RESPONSIVE (Compact Mobile) ============ */
     :root {
-      /* Colors */
       --bg-root: #090a0f;
       --bg-surface: #111318;
       --bg-elevated: #161920;
@@ -44,7 +42,6 @@
       --shadow-lg: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
       --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.15);
       
-      /* Desktop Font Sizes */
       --fs-xl: 22px;
       --fs-lg: 20px;
       --fs-md: 16px;
@@ -54,7 +51,6 @@
       --fs-xxs: 12px;
       --fs-tiny: 11px;
       
-      /* Desktop Spacing */
       --sp-2xl: 28px;
       --sp-xl: 24px;
       --sp-lg: 20px;
@@ -63,7 +59,6 @@
       --sp-xs: 12px;
       --sp-xxs: 8px;
       
-      /* Desktop Sizes */
       --logo-size: 52px;
       --logo-img: 34px;
       --icon-lg: 22px;
@@ -75,13 +70,11 @@
       --app-icon-size: 40px;
       --qr-size: 130px;
       
-      /* Desktop Border Radius */
       --radius-xl: 24px;
       --radius-lg: 18px;
       --radius-md: 14px;
       --radius-sm: 10px;
       
-      /* Font Families */
       --font-sans: 'Inter', 'Vazirmatn', system-ui, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
@@ -102,7 +95,6 @@
       --shadow-lg: 0 20px 50px -12px rgba(0,0,0,0.1);
     }
 
-    /* ============ TABLET BREAKPOINT ============ */
     @media (max-width: 768px) {
       :root {
         --fs-xl: 19px;
@@ -140,7 +132,6 @@
       }
     }
 
-    /* ============ MOBILE BREAKPOINT (Compact) ============ */
     @media (max-width: 480px) {
       :root {
         --fs-xl: 16px;
@@ -203,23 +194,23 @@
     .lucide-lg { width: var(--icon-lg); height: var(--icon-lg); }
     .lucide-xs { width: var(--icon-xs); height: var(--icon-xs); }
 
-    /* ============ LAYOUT ============ */
     .app-shell {
       max-width: 1200px;
       margin: 0 auto;
-      padding: var(--sp-lg) var(--sp-xl) 50px;
+      padding: var(--sp-lg) var(--sp-xl) 0;
       display: flex;
       flex-direction: column;
       gap: var(--sp-lg);
+      min-height: 100vh;
+      min-height: 100dvh;
     }
     @media (max-width: 480px) {
       .app-shell { 
-        padding: var(--sp-sm) var(--sp-xs) 30px; 
+        padding: var(--sp-sm) var(--sp-xs) 0; 
         gap: var(--sp-md);
       }
     }
 
-    /* ============ MASTHEAD ============ */
     .masthead {
       display: flex;
       align-items: center;
@@ -357,7 +348,6 @@
     }
     html[data-theme="light"] .toolbar-btn.active { color: #fff; }
 
-    /* ============ HERO TEXT ============ */
     .hero-text {
       font-size: var(--fs-sm);
       color: var(--text-secondary);
@@ -380,7 +370,6 @@
       font-weight: 700;
     }
 
-    /* ============ DASHBOARD CARD ============ */
     .dashboard-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
@@ -477,7 +466,6 @@
       gap: 2px;
     }
 
-    /* ============ SUBSCRIPTION STRIP ============ */
     .sub-strip {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
@@ -559,7 +547,6 @@
     }
     .btn-outline:active { background: var(--bg-overlay); }
 
-    /* ============ CONFIG SECTION ============ */
     .config-section {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
@@ -643,7 +630,6 @@
       gap: 3px;
     }
 
-    /* ============ APPS GRID ============ */
     .apps-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -736,7 +722,117 @@
       .action-stack { gap: 4px; }
     }
 
-    /* ============ TOAST ============ */
+    .footer-section {
+      margin-top: auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: var(--sp-lg) var(--sp-xl);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--sp-md);
+    }
+    @media (max-width: 480px) {
+      .footer-section {
+        padding: var(--sp-md) var(--sp-sm);
+        flex-direction: column;
+        text-align: center;
+        gap: var(--sp-sm);
+      }
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+    }
+    .footer-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--gradient-hero);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .footer-logo img {
+      width: 20px;
+      height: 20px;
+    }
+    .footer-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .footer-name {
+      font-size: var(--fs-sm);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .footer-version {
+      font-size: var(--fs-tiny);
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .footer-user-info {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-lg);
+      flex-wrap: wrap;
+    }
+    @media (max-width: 480px) {
+      .footer-user-info {
+        gap: var(--sp-sm);
+        justify-content: center;
+      }
+    }
+    .footer-user-badge {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-xxs);
+      background: var(--bg-elevated);
+      padding: var(--sp-xs) var(--sp-md);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      font-size: var(--fs-xs);
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+    @media (max-width: 480px) {
+      .footer-user-badge {
+        font-size: var(--fs-xxs);
+        padding: var(--sp-xxs) var(--sp-sm);
+      }
+    }
+    .footer-user-badge .user-name {
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+    .footer-social {
+      display: flex;
+      gap: var(--sp-xxs);
+    }
+    .footer-social a {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-tertiary);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .footer-social a:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      transform: translateY(-1px);
+    }
+
     .toast {
       position: fixed;
       bottom: 16px;
@@ -770,7 +866,6 @@
     }
     .toast.show { opacity: 1; }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 3px; height: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-emphasis); border-radius: 10px; }
@@ -787,7 +882,6 @@
 <body>
 <div class="app-shell">
   
-  <!-- Masthead -->
   <header class="masthead">
     <div class="brand-block">
       <div class="brand-mark"><img src="https://nqserver.github.io/NQ/logo-mark.svg" alt="NQServer" /></div>
@@ -821,7 +915,6 @@
 
   <p class="hero-text" id="hero-description"></p>
 
-  <!-- Usage Dashboard -->
   <div class="dashboard-card" id="usage-dashboard">
     <div class="metrics-row">
       <div class="metric-box">
@@ -850,7 +943,6 @@
     <div class="traffic-info" id="traffic-detail"></div>
   </div>
 
-  <!-- Subscription Link -->
   <div class="sub-strip">
     <code id="subscription-code">...</code>
     <button class="btn btn-outline" id="copy-subscription">
@@ -858,7 +950,6 @@
     </button>
   </div>
 
-  <!-- Individual Configs -->
   <div class="config-section">
     <div class="config-section-header">
       <h2>
@@ -882,8 +973,41 @@
     </div>
   </div>
 
-  <!-- Apps Grid -->
   <div class="apps-grid" id="apps-container"></div>
+
+  <footer class="footer-section">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <img src="https://nqserver.github.io/NQ/logo-mark.svg" alt="NQ" />
+      </div>
+      <div class="footer-info">
+        <span class="footer-name">NQServer</span>
+        <span class="footer-version">v2.0.0</span>
+      </div>
+    </div>
+    <div class="footer-user-info">
+      <div class="footer-user-badge">
+        <i data-lucide="user" class="lucide lucide-xs"></i>
+        <span id="footer-username-text">User: </span>
+        <span class="user-name" id="footer-username">-</span>
+      </div>
+      <div class="footer-user-badge">
+        <i data-lucide="link" class="lucide lucide-xs"></i>
+        <span id="footer-sub-text">Subscription Active</span>
+      </div>
+    </div>
+    <div class="footer-social">
+      <a href="https://t.me/nqserver" target="_blank" rel="noopener" title="Telegram">
+        <i data-lucide="send" class="lucide lucide-xs"></i>
+      </a>
+      <a href="https://instagram.com/nqserver" target="_blank" rel="noopener" title="Instagram">
+        <i data-lucide="instagram" class="lucide lucide-xs"></i>
+      </a>
+      <a href="https://github.com/nqserver" target="_blank" rel="noopener" title="GitHub">
+        <i data-lucide="github" class="lucide lucide-xs"></i>
+      </a>
+    </div>
+  </footer>
 
 </div>
 <div class="toast" id="global-toast">
@@ -903,7 +1027,8 @@
         configTitle: 'Single Configs', copyAll: 'Copy All', copySub: 'Copy',
         copied: 'Copied!', ready: 'Ready for import',
         vlessCount: 'VLESS URIs', loading: 'Loading…', noConfig: 'No configs found.',
-        errorConfig: 'Error loading configs.'
+        errorConfig: 'Error loading configs.', footerUser: 'User: ',
+        footerSubActive: 'Subscription Active', footerSubInactive: 'No Subscription'
       },
       fa: {
         tagline: 'اشتراک', hero: 'کلاینت خود را انتخاب کنید، QR را اسکن یا <strong>افزودن</strong> بزنید.',
@@ -913,7 +1038,8 @@
         configTitle: 'کانفیگ‌های تکی', copyAll: 'کپی همه', copySub: 'کپی',
         copied: 'کپی شد!', ready: 'آماده ایمپورت',
         vlessCount: 'کانفیگ VLESS', loading: 'در حال بارگذاری…', noConfig: 'کانفیگی یافت نشد.',
-        errorConfig: 'خطا در بارگذاری کانفیگ‌ها.'
+        errorConfig: 'خطا در بارگذاری کانفیگ‌ها.', footerUser: 'کاربر: ',
+        footerSubActive: 'اشتراک فعال', footerSubInactive: 'بدون اشتراک'
       }
     };
 
@@ -921,6 +1047,7 @@
     let theme = document.documentElement.dataset.theme || 'dark';
     let usageInfo = null;
     let configsList = [];
+    let username = '';
 
     const APPS = [
       { name: 'Hiddify', color: '#7c5cff', fmt: 'b64', deep: u => `hiddify://import/${u}`, icon: 'smartphone' },
@@ -935,6 +1062,15 @@
 
     const $ = (id) => document.getElementById(id);
     const t = (key) => DICT[lang]?.[key] || DICT['en'][key] || key;
+
+    function getUsername() {
+      try {
+        const u = new URL(location.href);
+        return u.searchParams.get('u') || u.searchParams.get('sub') || u.searchParams.get('user') || '';
+      } catch(e) {
+        return '';
+      }
+    }
 
     function updateThemeButtons() {
       const currentTheme = document.documentElement.dataset.theme || 'dark';
@@ -980,6 +1116,16 @@
       ['b64','base64','clash','sb','singbox','surge','quanx','loon','target','page','hub','raw'].forEach(p => u.searchParams.delete(p));
       let base = u.toString();
       return base + (base.includes('?') ? '&' : '?') + (fmt === 'b64' ? 'b64' : fmt);
+    }
+
+    function updateFooter() {
+      $('footer-username-text').textContent = t('footerUser');
+      $('footer-username').textContent = username || '-';
+      if (username) {
+        $('footer-sub-text').textContent = t('footerSubActive');
+      } else {
+        $('footer-sub-text').textContent = t('footerSubInactive');
+      }
     }
 
     async function loadUsage() {
@@ -1117,6 +1263,8 @@
       document.documentElement.lang = lang;
       document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
       
+      username = getUsername();
+      
       $('brand-tagline').textContent = t('tagline');
       $('hero-description').innerHTML = t('hero');
       $('lbl-used').textContent = t('used');
@@ -1127,6 +1275,7 @@
       $('copy-sub-text').textContent = t('copySub');
       $('subscription-code').textContent = buildSub('b64');
       
+      updateFooter();
       updateThemeButtons();
       
       renderUsage();
@@ -1135,7 +1284,6 @@
       if (window.lucide) lucide.createIcons();
     }
 
-    // Event Listeners
     $('lang-toolbar').addEventListener('click', e => {
       const btn = e.target.closest('[data-lang]'); 
       if (!btn) return;
@@ -1169,7 +1317,6 @@
       resizeTimer = setTimeout(() => renderApps(), 200);
     });
 
-    // Init
     if (!window.QRCode) {
       let attempts = 0;
       const checkQR = setInterval(() => {
