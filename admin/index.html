@@ -3205,10 +3205,7 @@
     </div>
 
     <script src="/qrcode.min.js"></script>
-/* ============================================================================
-   i18n, English / Farsi. RTL is driven by the <html dir> attribute, and the
-   CSS uses logical properties throughout, so the whole layout mirrors cleanly.
-   ========================================================================== */
+<script>
 const I18N = {
   en:{
     monthlycap_h:'Monthly data cap', monthlycap_p:'Auto-pauses all proxy traffic for the rest of the month once this much data is used, a backstop that protects your Cloudflare account from abuse-detection suspensions. 0 = no cap.', monthlycap_label:'GB / month (0 = off)', speedlimit_h:'Speed limit', speedlimit_p:'Caps the total download speed of each user across all their connections, a fairness backstop so no single user can saturate the worker. 0 = unlimited. A per-user limit (on the Users page) overrides this.', speedlimit_label:'Download KB/s (0 = off)',
