@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Nova Proxy · Control Panel</title>
+    <title>NQServer · Control Panel</title>
     <meta name="nova-panel-version" content="4.0.0" />
     <link rel="icon" type="image/svg+xml" href="/logo-mark.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2302,10 +2302,10 @@
         <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
             <div class="brand">
                 <div class="mark">
-                    <img src="/logo-mark.svg" alt="Nova Proxy" />
+                    <img src="/logo-mark.svg" alt="NQServer" />
                 </div>
                 <div>
-                    <div class="name">Nova Proxy</div>
+                    <div class="name">NQServer</div>
                     <div class="env"><span class="d"></span><span data-i18n="env_prod">Production</span></div>
                 </div>
             </div>
@@ -2596,7 +2596,7 @@
                             <div class="right"><span class="lockpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span data-i18n="notice_locked">Always on</span></span></div>
                         </div>
                         <p style="font-size:12.5px;color:var(--mu);margin:0 0 11px" data-i18n="notice_s">A labelled node is baked into every config so users always know this is the free Nova service. It is fixed in the worker, so it cannot be turned off, renamed, or stripped by a reseller.</p>
-                        <div class="notice-box"><span class="notice-tag" data-i18n="notice_node">Node label</span><code>🎁 Nova Proxy is a FREE service | نوا پروکسی یک سرویس رایگان است</code></div>
+                        <div class="notice-box"><span class="notice-tag" data-i18n="notice_node">Node label</span><code>🎁 NQServer is a FREE service | نوا پروکسی یک سرویس رایگان است</code></div>
                     </div>
 
                     <div class="section-label" data-i18n="dist_clients">Client applications</div>
@@ -3295,7 +3295,7 @@
                 wg_nowarp: 'No WARP config available, register WARP in Network & IPs first.',
                 ab_panel: 'Panel',
                 ab_worker: 'Worker',
-                ab_desc: 'Nova Proxy control panel, manage subscriptions, clean IPs, routing, WARP and DNS for your Cloudflare Worker.',
+                ab_desc: 'NQServer control panel, manage subscriptions, clean IPs, routing, WARP and DNS for your Cloudflare Worker.',
                 ab_changelog: 'Changelog',
                 ab_links: 'Links',
                 skip_main: 'Skip to main content',
@@ -3357,7 +3357,7 @@
                 kill_s: 'Emergency stop. While on, every proxy connection and subscription fetch is refused (503). The admin panel stays reachable so you can switch it back off. Use it if your service is being abused.',
                 kill_banner: 'Service is paused. All proxy traffic and subscription fetches are stopped. Turn the kill switch off in Settings to resume.',
                 nav_guide: 'Guide',
-                sub_guide: 'How to use Nova Proxy, step by step.',
+                sub_guide: 'How to use NQServer, step by step.',
                 logout: 'Logout',
                 kpi_network: 'Network',
                 kpi_storage: 'Storage',
@@ -3774,7 +3774,7 @@
                 wg_nowarp: 'کانفیگ WARP موجود نیست, ابتدا در شبکه و آی‌پی WARP را ثبت کنید.',
                 ab_panel: 'پنل',
                 ab_worker: 'ورکر',
-                ab_desc: 'پنل مدیریت Nova Proxy, مدیریت اشتراک‌ها، آی‌پی‌های تمیز، مسیریابی، WARP و DNS برای ورکر کلودفلر شما.',
+                ab_desc: 'پنل مدیریت NQServer, مدیریت اشتراک‌ها، آی‌پی‌های تمیز، مسیریابی، WARP و DNS برای ورکر کلودفلر شما.',
                 ab_changelog: 'تغییرات',
                 ab_links: 'پیوندها',
                 skip_main: 'پرش به محتوای اصلی',
@@ -7808,7 +7808,7 @@
             const qb = e.target.closest('[data-qr-url]');
             if (qb) { showQR(qb.dataset.qrUrl, qb.dataset.qrName); return; }
             if (e.target.closest('#open-qr') || e.target.closest('#open-qr2') || e.target.closest('#dist-qr')) {
-                showQR(STATE.subUrl || subFor('b64'), 'Nova Proxy');
+                showQR(STATE.subUrl || subFor('b64'), 'NQServer');
                 return;
             }
             const ib = e.target.closest('[data-import-sub]');
