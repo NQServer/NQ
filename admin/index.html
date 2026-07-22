@@ -3812,7 +3812,6 @@ function adaptConfigForNewWorker(data, migrationMode) {
   return adapted;
 }
 
-// تابع بازیابی از فایل JSON
 async function restoreFullBackup(file) {
   const msg = document.getElementById('backup-msg');
   if (!LIVE) return previewToast();
@@ -3835,7 +3834,7 @@ async function restoreFullBackup(file) {
 
     let { config, network, users, usage, warp, tg, logs } = data.data;
     
-    // اعمال مهاجرت
+    // ============== اعمال مهاجرت ==============
     if (migrationMode) {
       const adapted = adaptConfigForNewWorker(data, true);
       config = adapted.config;
@@ -3848,7 +3847,8 @@ async function restoreFullBackup(file) {
       });
     }
 
-    // ذخیره تنظیمات
+    // ============== ذخیره تنظیمات ==============
+    // 1. ذخیره Config
     if (config) {
       const cleanConfig = { ...config };
       delete cleanConfig._previousHost;
@@ -3864,6 +3864,7 @@ async function restoreFullBackup(file) {
       STATE.config = cleanConfig;
     }
 
+    // 2. ذخیره Network Settings
     if (network) {
       const cleanNetwork = { ...network };
       delete cleanNetwork._previousAdminPath;
@@ -3874,7 +3875,7 @@ async function restoreFullBackup(file) {
       STATE.net = cleanNetwork;
     }
 
-    // ذخیره کاربران
+    // 3. ذخیره کاربران
     if (users && users.length > 0) {
       let finalUsers = users;
       
@@ -3893,31 +3894,75 @@ async function restoreFullBackup(file) {
       STATE.multiUser = finalUsers.length > 0;
     }
 
-    // ذخیره مصرف
-    if (usage) {
-      await API.post('usage.json', usage);
-      STATE.usage = usage;
+    // ============== بازیابی مصرف کاربران ==============
+    // ساختار مصرف در فایل بکاپ:
+    // usage: {} (خالی)
+    // usageDay: { userId: number, ... }
+    // usageIO: { userId: { up: number, down: number }, ... }
+    
+    // 4. بازیابی مصرف (usage) - از روی usageIO و usageDay محاسبه می‌شود
+    if (data.data.usageDay || data.data.usageIO) {
+      const newUsage = {};
+      
+      // اگر usage موجود است، از آن استفاده کن
+      if (usage && typeof usage === 'object' && Object.keys(usage).length > 0) {
+        Object.assign(newUsage, usage);
+      }
+      
+      // اگر usageIO موجود است، مجموع up+down را به عنوان مصرف کل در نظر بگیر
+      if (data.data.usageIO) {
+        for (const [userId, io] of Object.entries(data.data.usageIO)) {
+          if (io && typeof io === 'object') {
+            const total = (io.up || 0) + (io.down || 0);
+            // اگر قبلاً مصرفی برای این کاربر ثبت نشده، مقدار جدید را ذخیره کن
+            if (!newUsage[userId] || newUsage[userId] === 0) {
+              newUsage[userId] = total;
+            }
+          }
+        }
+      }
+      
+      // اگر مصرف روزانه موجود است، آن را هم ذخیره کن
+      if (data.data.usageDay) {
+        STATE.usageDay = { ...data.data.usageDay };
+        try {
+          await API.post('usage-day.json', STATE.usageDay);
+        } catch (e) {
+          console.warn('Could not save usageDay:', e);
+        }
+      }
+      
+      // ذخیره مصرف IO
+      if (data.data.usageIO) {
+        STATE.usageIO = { ...data.data.usageIO };
+        try {
+          await API.post('usage-io.json', STATE.usageIO);
+        } catch (e) {
+          console.warn('Could not save usageIO:', e);
+        }
+      }
+      
+      // ذخیره مصرف اصلی
+      if (Object.keys(newUsage).length > 0) {
+        STATE.usage = newUsage;
+        await API.post('usage.json', newUsage);
+        console.log('✅ Usage restored:', newUsage);
+      } else {
+        console.warn('⚠️ No usage data to restore');
+      }
     }
 
-    if (usage && usage.day) {
-      STATE.usageDay = usage.day || {};
-    }
-
-    if (usage && usage.io) {
-      STATE.usageIO = usage.io || {};
-    }
-
-    // ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
+    // 5. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
     if (warp && !migrationMode) {
       await API.post('warp.json', warp);
     }
 
-    // ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
+    // 6. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
     if (tg && !migrationMode) {
       await API.post('tg.json', tg);
     }
 
-    // به‌روزرسانی UI
+    // 7. به‌روزرسانی UI
     await loadLive();
     renderUsers();
     renderKPIs();
@@ -3927,7 +3972,7 @@ async function restoreFullBackup(file) {
       ? (lang === 'fa' ? '✅ بازیابی با مهاجرت انجام شد' : '✅ Restore with migration completed')
       : (lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed');
     
-    msg.textContent = msgText;
+    msg.textContent = msgText + ' (' + Object.keys(STATE.usage).length + ' کاربر با مصرف)';
     msg.style.color = 'var(--ok)';
     toast(msgText);
     
