@@ -1173,6 +1173,21 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
     <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
     <span id="backup-msg" style="font-size:12px;color:var(--mu)"></span>
   </div>
+  
+  <!-- بخش جدید: تنظیمات مهاجرت -->
+  <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+    <div style="font-weight:600;font-size:13px;color:var(--ac);margin-bottom:4px" data-i18n="migrate_h">🔄 Migration Settings</div>
+    <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="migrate_s">When restoring a backup from another worker, enable "Migration Mode" to automatically adapt settings (domains, paths, and environment-specific values) to the new worker.</p>
+    <div class="field-row">
+      <div class="l">Migration Mode<small>Auto-adapt settings for the new worker</small></div>
+      <div class="sw on" id="t2-migration"><span class="k"></span></div>
+    </div>
+    <div class="field-row">
+      <div class="l">Preserve User Data<small>Keep user quotas, usage, and expiry dates</small></div>
+      <div class="sw on" id="t2-preserve-users"><span class="k"></span></div>
+    </div>
+  </div>
+  
   <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
     <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px" data-i18n="reset_h">Factory reset</div>
     <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="reset_s">Wipes everything from the database (settings, network, clean IPs, users, Cloudflare and Telegram keys) and restores the initial state. Your panel password is kept. This cannot be undone.</p>
@@ -3638,11 +3653,16 @@ async function loadVersions(){
   if(!LIVE) console.log('%cNova panel, preview mode (no backend): showing mock data','color:#f5b042;font-weight:700');
 })();
 
+// ==============================================
+// بخش بکاپ و مهاجرت کامل - نسخه تصحیح شده
+// ==============================================
+
+// تابع دریافت تمام اطلاعات از سرور
 async function fetchFullBackup() {
   try {
     // دریافت تمام اطلاعات از API های مختلف
     const [config, network, users, usage, warp, tg, logs] = await Promise.all([
-      API.get('config.json'),
+      API.get('config.json').catch(() => ({})),
       API.get('network-settings.json').catch(() => ({})),
       API.get('users.json').catch(() => ({ users: [] })),
       API.get('usage.json').catch(() => ({})),
@@ -3657,10 +3677,18 @@ async function fetchFullBackup() {
     const usageDay = STATE.usageDay || {};
     const usageIO = STATE.usageIO || {};
 
+    // دریافت اطلاعات سیستم فعلی
+    const system = await API.get('system.json').catch(() => ({}));
+
     return {
-      version: '1.0',
+      version: '2.0',
       exportedAt: new Date().toISOString(),
       panelVersion: document.querySelector('meta[name="nova-panel-version"]')?.getAttribute('content') || 'unknown',
+      sourceWorker: {
+        host: location.host,
+        origin: location.origin,
+        system: system
+      },
       data: {
         config,
         network,
@@ -3670,10 +3698,10 @@ async function fetchFullBackup() {
         usageIO,
         warp,
         tg,
-        logs,
+        logs: logs.slice(0, 1000), // فقط 1000 لاگ آخر
         reqs,
         reqsDay,
-        // اضافه کردن اطلاعات اضافی مثل لیست کاربران با جزئیات کامل
+        // اضافه کردن اطلاعات کامل کاربران
         usersDetail: (users.users || []).map(u => ({
           ...u,
           usage: usage[u.id] || 0,
@@ -3702,6 +3730,106 @@ function downloadBackup(data) {
   URL.revokeObjectURL(url);
 }
 
+// تابع تطبیق تنظیمات برای ورکر جدید
+function adaptConfigForNewWorker(data, migrationMode) {
+  if (!migrationMode) return data;
+  
+  const adapted = JSON.parse(JSON.stringify(data));
+  const currentHost = location.host;
+  const currentOrigin = location.origin;
+  
+  // 1. به‌روزرسانی HOSTS
+  if (adapted.config && adapted.config.HOSTS && Array.isArray(adapted.config.HOSTS)) {
+    // اگر HOSTS قبلی شامل دامنه فعلی نیست، دامنه فعلی را اضافه کن
+    if (!adapted.config.HOSTS.includes(currentHost)) {
+      adapted.config.HOSTS = [currentHost, ...adapted.config.HOSTS];
+    }
+  }
+  
+  // 2. به‌روزرسانی HOST (مقدار اصلی)
+  if (adapted.config && adapted.config.HOST) {
+    // اگر HOST قبلی با دامنه فعلی متفاوت است، آن را به‌روز کن
+    const oldHost = adapted.config.HOST;
+    if (oldHost !== currentHost) {
+      adapted.config.HOST = currentHost;
+      // ذخیره HOST قبلی برای مرجع
+      adapted.config._previousHost = oldHost;
+    }
+  }
+  
+  // 3. به‌روزرسانی مسیرهای استتار (Disguise)
+  if (adapted.network && adapted.network.disguise) {
+    // اگر در حالت مهاجرت هستیم، مسیرهای استتار را ریست می‌کنیم تا تداخل نداشته باشند
+    // کاربر می‌تواند بعداً دوباره تنظیم کند
+    if (adapted.network.adminPath && adapted.network.adminPath.length > 0) {
+      adapted.network._previousAdminPath = adapted.network.adminPath;
+      adapted.network.adminPath = '';
+    }
+    if (adapted.network.loginPath && adapted.network.loginPath.length > 0) {
+      adapted.network._previousLoginPath = adapted.network.loginPath;
+      adapted.network.loginPath = '';
+    }
+    if (adapted.network.subPath && adapted.network.subPath.length > 0) {
+      adapted.network._previousSubPath = adapted.network.subPath;
+      adapted.network.subPath = '';
+    }
+  }
+  
+  // 4. به‌روزرسانی آدرس Backend
+  if (adapted.network && adapted.network.backendUrl) {
+    const oldUrl = adapted.network.backendUrl;
+    // اگر Backend URL به دامنه قبلی اشاره دارد، به‌روزرسانی کن
+    if (oldUrl.includes('://') && !oldUrl.includes(currentHost)) {
+      try {
+        const url = new URL(oldUrl);
+        // فقط اگر Backend روی همان دامنه بوده، تغییرش بده
+        if (url.hostname === adapted.sourceWorker?.host || url.hostname === adapted._previousHost) {
+          url.hostname = currentHost;
+          adapted.network.backendUrl = url.toString();
+          adapted.network._previousBackendUrl = oldUrl;
+        }
+      } catch (e) {
+        // اگر URL معتبر نبود، تغییرش نده
+      }
+    }
+  }
+  
+  // 5. به‌روزرسانی GitHub Mirror
+  if (adapted.config && adapted.config.mirror) {
+    // اگر Mirror فعال است، توکن را پاک کن (برای امنیت)
+    if (adapted.config.mirror.token) {
+      adapted.config.mirror._previousToken = '***REMOVED***';
+      adapted.config.mirror.token = '';
+    }
+  }
+  
+  // 6. به‌روزرسانی UUID (اختیاری - برای امنیت)
+  // اگر می‌خواهید UUID جدید تولید شود، این بخش را فعال کنید
+  // اما برای حفظ کاربران فعلی، UUID را تغییر نمی‌دهیم
+  
+  // 7. به‌روزرسانی ECH SNI
+  if (adapted.config && adapted.config.ECHConfig && adapted.config.ECHConfig.SNI) {
+    const oldSNI = adapted.config.ECHConfig.SNI;
+    // اگر SNI به دامنه قبلی اشاره دارد، به‌روزرسانی کن
+    if (oldSNI && oldSNI !== currentHost && (oldSNI.includes(adapted.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
+      adapted.config.ECHConfig.SNI = currentHost;
+      adapted.config.ECHConfig._previousSNI = oldSNI;
+    }
+  }
+  
+  // 8. به‌روزرسانی Central API
+  if (adapted.config && adapted.config.centralApi) {
+    const oldApi = adapted.config.centralApi;
+    if (oldApi.includes(adapted.sourceWorker?.host) || oldApi.includes('novaproxy')) {
+      // Central API را غیرفعال کن تا با تنظیمات جدید تداخل نداشته باشد
+      adapted.config.centralApi = '';
+      adapted.config._previousCentralApi = oldApi;
+    }
+  }
+  
+  return adapted;
+}
+
 // تابع بازیابی از فایل JSON
 async function restoreFullBackup(file) {
   const msg = document.getElementById('backup-msg');
@@ -3716,30 +3844,83 @@ async function restoreFullBackup(file) {
       throw new Error('فایل بکاپ نامعتبر است');
     }
 
+    // بررسی حالت مهاجرت
+    const migrationMode = document.getElementById('t2-migration')?.classList.contains('on') || false;
+    const preserveUsers = document.getElementById('t2-preserve-users')?.classList.contains('on') || false;
+    
     msg.textContent = lang === 'fa' ? 'در حال بازیابی...' : 'Restoring...';
     msg.style.color = 'var(--mu)';
 
-    const { config, network, users, usage, warp, tg, logs } = data.data;
-
-    // بازیابی تنظیمات
-    if (config) {
-      await API.post('config.json', config);
-    }
-
-    if (network) {
-      await API.post('network-settings.json', network);
-    }
-
-    // بازیابی کاربران
-    if (users) {
-      await API.post('users.json', { users: users, multiUser: users.length > 0 });
+    let { config, network, users, usage, warp, tg, logs } = data.data;
+    
+    // ============== اعمال مهاجرت ==============
+    if (migrationMode) {
+      // تطبیق تنظیمات با ورکر جدید
+      const adapted = adaptConfigForNewWorker(data, true);
+      config = adapted.config;
+      network = adapted.network;
       
-      // به‌روزرسانی STATE
-      STATE.users = users;
-      STATE.multiUser = users.length > 0;
+      // نمایش پیام مهاجرت
+      console.log('🔄 Migration applied:', {
+        previousHost: config?._previousHost || 'unknown',
+        currentHost: location.host,
+        adapted: true
+      });
     }
 
-    // بازیابی مصرف
+    // ============== ذخیره تنظیمات ==============
+    // 1. ذخیره Config
+    if (config) {
+      // حذف فیلدهای موقت مهاجرت قبل از ذخیره
+      const cleanConfig = { ...config };
+      delete cleanConfig._previousHost;
+      delete cleanConfig._previousCentralApi;
+      delete cleanConfig._previousBackendUrl;
+      if (cleanConfig.ECHConfig) {
+        delete cleanConfig.ECHConfig._previousSNI;
+      }
+      if (cleanConfig.mirror) {
+        delete cleanConfig.mirror._previousToken;
+      }
+      await API.post('config.json', cleanConfig);
+      STATE.config = cleanConfig;
+    }
+
+    // 2. ذخیره Network Settings
+    if (network) {
+      const cleanNetwork = { ...network };
+      delete cleanNetwork._previousAdminPath;
+      delete cleanNetwork._previousLoginPath;
+      delete cleanNetwork._previousSubPath;
+      delete cleanNetwork._previousBackendUrl;
+      await API.post('network-settings.json', cleanNetwork);
+      STATE.net = cleanNetwork;
+    }
+
+    // 3. ذخیره کاربران
+    if (users && users.length > 0) {
+      // اگر در حالت مهاجرت هستیم و کاربران فعلی وجود دارند، می‌توانیم ادغام کنیم
+      let finalUsers = users;
+      
+      if (preserveUsers) {
+        // کاربران جدید را با کاربران موجود ادغام کن
+        const currentUsers = STATE.users || [];
+        const existingIds = new Set(currentUsers.map(u => u.id));
+        
+        // کاربرانی که ID تکراری ندارند را اضافه کن
+        const newUsers = users.filter(u => !existingIds.has(u.id));
+        finalUsers = [...currentUsers, ...newUsers];
+      }
+      
+      await API.post('users.json', { 
+        users: finalUsers, 
+        multiUser: finalUsers.length > 0 
+      });
+      STATE.users = finalUsers;
+      STATE.multiUser = finalUsers.length > 0;
+    }
+
+    // 4. ذخیره مصرف
     if (usage) {
       await API.post('usage.json', usage);
       STATE.usage = usage;
@@ -3753,81 +3934,87 @@ async function restoreFullBackup(file) {
       STATE.usageIO = usage.io || {};
     }
 
-    // بازیابی WARP
-    if (warp) {
+    // 5. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم یا WARP غیرفعال باشد)
+    if (warp && !migrationMode) {
       await API.post('warp.json', warp);
     }
 
-    // بازیابی تلگرام
-    if (tg) {
+    // 6. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم یا توکن وجود داشته باشد)
+    if (tg && !migrationMode) {
       await API.post('tg.json', tg);
     }
 
-    // به‌روزرسانی UI
+    // 7. به‌روزرسانی UI
     await loadLive();
     renderUsers();
     renderKPIs();
     syncFormValues();
     
-    msg.textContent = lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed';
+    const msgText = migrationMode 
+      ? (lang === 'fa' ? '✅ بازیابی با مهاجرت انجام شد' : '✅ Restore with migration completed')
+      : (lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed');
+    
+    msg.textContent = msgText;
     msg.style.color = 'var(--ok)';
-    toast(lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed');
+    toast(msgText);
     
   } catch (e) {
     msg.textContent = '⚠️ ' + (lang === 'fa' ? 'خطا در بازیابی: ' : 'Restore error: ') + e.message;
     msg.style.color = 'var(--dg)';
     toast(lang === 'fa' ? '❌ خطا در بازیابی' : '❌ Restore error', 1);
+    console.error('Restore error:', e);
   }
 }
 
-// اتصال دکمه‌های بکاپ جدید
-document.addEventListener('DOMContentLoaded', function() {
-  // دکمه اکسپورت کامل
-  const exportBtn = document.getElementById('backup-export2');
-  if (exportBtn) {
-    exportBtn.onclick = async function() {
-      const msg = document.getElementById('backup-msg');
-      if (!LIVE) {
-        msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
-        msg.style.color = 'var(--wn)';
-        return;
-      }
-      
-      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
-      msg.style.color = 'var(--mu)';
-      
-      try {
-        const backupData = await fetchFullBackup();
-        downloadBackup(backupData);
-        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
-        msg.style.color = 'var(--ok)';
-        toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
-      } catch (e) {
-        msg.textContent = '⚠️ ' + e.message;
-        msg.style.color = 'var(--dg)';
-        toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
-      }
-    };
-  }
+// ==============================================
+// اتصال دکمه‌های بکاپ
+// ==============================================
 
-  // دکمه ایمپورت کامل
-  const importBtn = document.getElementById('backup-import2');
-  const fileInput = document.getElementById('backup-file2');
-  
-  if (importBtn && fileInput) {
-    importBtn.onclick = function() {
-      fileInput.click();
-    };
+// دکمه اکسپورت کامل
+const exportBtn = document.getElementById('backup-export2');
+if (exportBtn) {
+  exportBtn.onclick = async function() {
+    const msg = document.getElementById('backup-msg');
+    if (!LIVE) {
+      msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
+      msg.style.color = 'var(--wn)';
+      return;
+    }
     
-    fileInput.onchange = function(e) {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        restoreFullBackup(file);
-        fileInput.value = ''; // reset input
-      }
-    };
-  }
-});
+    msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
+    msg.style.color = 'var(--mu)';
+    
+    try {
+      const backupData = await fetchFullBackup();
+      downloadBackup(backupData);
+      msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
+      msg.style.color = 'var(--ok)';
+      toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
+    } catch (e) {
+      msg.textContent = '⚠️ ' + e.message;
+      msg.style.color = 'var(--dg)';
+      toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
+    }
+  };
+}
+
+// دکمه ایمپورت کامل
+const importBtn = document.getElementById('backup-import2');
+const fileInput = document.getElementById('backup-file2');
+
+if (importBtn && fileInput) {
+  importBtn.onclick = function() {
+    fileInput.click();
+  };
+  
+  fileInput.onchange = function(e) {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      restoreFullBackup(file);
+      fileInput.value = ''; // reset input
+    }
+  };
+}
 </script>
 </body>
 </html>
