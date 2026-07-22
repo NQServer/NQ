@@ -1163,40 +1163,40 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
             </div>
           </div>
         </div>
-<div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
-<div class="card card-pad">
-  <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
-    <button class="btn ghost sm" id="backup-export2" data-i18n="backup_export">Export</button>
-    <button class="btn ghost sm" id="backup-import2" data-i18n="backup_import">Import</button>
-    <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
-    <span id="backup-msg" style="font-size:12px;color:var(--mu)"></span>
-  </div>
-  
-  <!-- بخش جدید: تنظیمات مهاجرت -->
-  <div style="border-top:1px solid var(--bd);padding-top:14px">
-    <div style="font-weight:600;font-size:13px;color:var(--ac);margin-bottom:4px" data-i18n="migrate_h">🔄 Migration Settings</div>
-    <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="migrate_s">When restoring a backup from another worker, enable "Migration Mode" to automatically adapt settings (domains, paths, and environment-specific values) to the new worker.</p>
-    <div class="field-row">
-      <div class="l">Migration Mode<small>Auto-adapt settings for the new worker</small></div>
-      <div class="sw" id="t2-migration"><span class="k"></span></div>
-    </div>
-    <div class="field-row">
-      <div class="l">Preserve User Data<small>Keep existing user quotas, usage, and expiry dates when merging</small></div>
-      <div class="sw" id="t2-preserve-users"><span class="k"></span></div>
-    </div>
-  </div>
-  
-  <!-- Factory Reset -->
-  <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
-    <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px" data-i18n="reset_h">Factory reset</div>
-    <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="reset_s">Wipes everything from the database (settings, network, clean IPs, users, Cloudflare and Telegram keys) and restores the initial state. Your panel password is kept. This cannot be undone.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="btn sm" id="factory-reset" style="background:var(--dg);color:#fff;border-color:var(--dg)" data-i18n="reset_btn">Factory reset</button>
-      <span id="reset-msg" style="font-size:12px;color:var(--mu)"></span>
-    </div>
-  </div>
-</div>
+    <!-- ====== بخش Backup & maintenance (جایگزین شده) ====== -->
+    <div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
+    <div class="card card-pad">
+        <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+            <button class="btn ghost sm" id="backup-export2" data-i18n="backup_export">Export</button>
+            <button class="btn ghost sm" id="backup-import2" data-i18n="backup_import">Import</button>
+            <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
+            <span id="backup-msg" style="font-size:12px;color:var(--mu)"></span>
+        </div>
+        
+        <!-- تنظیمات مهاجرت -->
+        <div style="border-top:1px solid var(--bd);padding-top:14px">
+            <div style="font-weight:600;font-size:13px;color:var(--ac);margin-bottom:4px">🔄 Migration Settings</div>
+            <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px">When restoring a backup from another worker, enable "Migration Mode" to automatically adapt settings.</p>
+            <div class="field-row">
+                <div class="l">Migration Mode<small>Auto-adapt settings for the new worker</small></div>
+                <div class="sw" id="t2-migration"><span class="k"></span></div>
+            </div>
+            <div class="field-row">
+                <div class="l">Preserve User Data<small>Keep existing user quotas, usage, and expiry dates when merging</small></div>
+                <div class="sw" id="t2-preserve-users"><span class="k"></span></div>
+            </div>
+        </div>
+        
+        <!-- Factory Reset -->
+        <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+            <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px">Factory reset</div>
+            <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px">Wipes everything from the database and restores the initial state.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button class="btn sm" id="factory-reset" style="background:var(--dg);color:#fff;border-color:var(--dg)">Factory reset</button>
+                <span id="reset-msg" style="font-size:12px;color:var(--mu)"></span>
+            </div>
+        </div>
 
         <div class="section-label" data-i18n="upd_h">Update panel</div>
         <div class="card card-pad">
@@ -3653,279 +3653,276 @@ async function loadVersions(){
   if(!LIVE) console.log('%cNova panel, preview mode (no backend): showing mock data','color:#f5b042;font-weight:700');
 })();
 
-// ==============================================
-// بخش بکاپ کامل - سازگار با D1 Database
-// ==============================================
 
-// ========== 1. تابع دریافت کامل تمام داده‌ها ==========
-async function fetchFullBackup(env) {
-    try {
-        // دریافت داده‌ها از D1
-        const [config, network, users, warp, tg] = await Promise.all([
-            getConfigRaw(env).then(r => r ? JSON.parse(r) : {}),
-            env.KV.get('network-settings.json').then(r => r ? JSON.parse(r) : {}),
-            env.KV.get('users.json').then(r => r ? JSON.parse(r) : { users: [] }),
-            env.KV.get('warp-account.json').then(r => r ? JSON.parse(r) : {}),
-            env.KV.get('tg.json').then(r => r ? JSON.parse(r) : {})
-        ]);
+    // ========== 1. تابع دریافت کامل تمام داده‌ها ==========
+    async function fetchFullBackup(env) {
+        try {
+            // دریافت داده‌ها از D1
+            const [config, network, users, warp, tg] = await Promise.all([
+                getConfigRaw(env).then(r => r ? JSON.parse(r) : {}),
+                env.KV.get('network-settings.json').then(r => r ? JSON.parse(r) : {}),
+                env.KV.get('users.json').then(r => r ? JSON.parse(r) : { users: [] }),
+                env.KV.get('warp-account.json').then(r => r ? JSON.parse(r) : {}),
+                env.KV.get('tg.json').then(r => r ? JSON.parse(r) : {})
+            ]);
 
-        // ====== دریافت مصرف از D1 ======
-        let usageData = {};
-        let usageDayData = {};
-        let usageIOData = {};
-        let logsData = [];
+            // ====== دریافت مصرف از D1 ======
+            let usageData = {};
+            let usageDayData = {};
+            let usageIOData = {};
+            let logsData = [];
 
-        if (env.DB && typeof env.DB.prepare === 'function') {
-            try {
-                // دریافت مصرف کل کاربران از جدول usage
-                const usageRows = await env.DB.prepare('SELECT k, up, down, total FROM usage WHERE k LIKE "uusage:%"').all();
-                for (const row of usageRows.results || []) {
-                    const userId = row.k.replace('uusage:', '');
-                    usageData[userId] = row.total || 0;
-                    usageIOData[userId] = { up: row.up || 0, down: row.down || 0 };
-                }
-
-                // دریافت مصرف روزانه
-                const dayRows = await env.DB.prepare('SELECT k, total FROM usage WHERE k LIKE "uusage-d:%"').all();
-                for (const row of dayRows.results || []) {
-                    const parts = row.k.replace('uusage-d:', '').split(':');
-                    if (parts.length === 2) {
-                        const userId = parts[0];
-                        const day = parts[1];
-                        if (!usageDayData[userId]) usageDayData[userId] = {};
-                        usageDayData[userId][day] = row.total || 0;
+            if (env.DB && typeof env.DB.prepare === 'function') {
+                try {
+                    // دریافت مصرف کل کاربران از جدول usage
+                    const usageRows = await env.DB.prepare('SELECT k, up, down, total FROM usage WHERE k LIKE "uusage:%"').all();
+                    for (const row of usageRows.results || []) {
+                        const userId = row.k.replace('uusage:', '');
+                        usageData[userId] = row.total || 0;
+                        usageIOData[userId] = { up: row.up || 0, down: row.down || 0 };
                     }
+
+                    // دریافت مصرف روزانه
+                    const dayRows = await env.DB.prepare('SELECT k, total FROM usage WHERE k LIKE "uusage-d:%"').all();
+                    for (const row of dayRows.results || []) {
+                        const parts = row.k.replace('uusage-d:', '').split(':');
+                        if (parts.length === 2) {
+                            const userId = parts[0];
+                            const day = parts[1];
+                            if (!usageDayData[userId]) usageDayData[userId] = {};
+                            usageDayData[userId][day] = row.total || 0;
+                        }
+                    }
+
+                    // دریافت لاگ‌ها
+                    const logRows = await env.DB.prepare('SELECT TYPE, IP, ASN, CC, URL, UA, TIME FROM logs ORDER BY id DESC LIMIT 1000').all();
+                    logsData = logRows.results || [];
+
+                } catch (e) {
+                    console.error('Error fetching from D1:', e);
                 }
-
-                // دریافت لاگ‌ها
-                const logRows = await env.DB.prepare('SELECT TYPE, IP, ASN, CC, URL, UA, TIME FROM logs ORDER BY id DESC LIMIT 1000').all();
-                logsData = logRows.results || [];
-
-            } catch (e) {
-                console.error('Error fetching from D1:', e);
             }
-        }
 
-        // ====== دریافت اطلاعات اضافی از KV ======
-        const [kvData, system] = await Promise.all([
-            env.KV.list({ prefix: '' }).then(async (list) => {
-                const result = {};
-                for (const key of (list.keys || [])) {
-                    try {
-                        const val = await env.KV.get(key.name);
-                        if (val) result[key.name] = val;
-                    } catch (e) { /* ignore */ }
-                }
-                return result;
-            }),
-            env.KV.get('system.json').then(r => r ? JSON.parse(r) : {})
-        ]);
+            // ====== دریافت اطلاعات اضافی از KV ======
+            const [kvData, system] = await Promise.all([
+                env.KV.list({ prefix: '' }).then(async (list) => {
+                    const result = {};
+                    for (const key of (list.keys || [])) {
+                        try {
+                            const val = await env.KV.get(key.name);
+                            if (val) result[key.name] = val;
+                        } catch (e) { /* ignore */ }
+                    }
+                    return result;
+                }),
+                env.KV.get('system.json').then(r => r ? JSON.parse(r) : {})
+            ]);
 
-        return {
-            version: '3.0',
-            type: 'FULL_BACKUP_D1',
-            exportedAt: new Date().toISOString(),
-            panelVersion: Version || '4.0.0',
-            sourceWorker: {
-                host: location?.host || '',
-                origin: location?.origin || '',
-                d1Connected: !!env.DB
-            },
-            data: {
-                config,
-                network,
-                users: users.users || [],
-                warp,
-                tg,
-                // ====== داده‌های D1 ======
-                d1: {
-                    usage: usageData,
-                    usageDay: usageDayData,
-                    usageIO: usageIOData,
-                    logs: logsData
+            return {
+                version: '3.0',
+                type: 'FULL_BACKUP_D1',
+                exportedAt: new Date().toISOString(),
+                panelVersion: Version || '4.0.0',
+                sourceWorker: {
+                    host: location?.host || '',
+                    origin: location?.origin || '',
+                    d1Connected: !!env.DB
                 },
-                // ====== داده‌های KV ======
-                kv: kvData,
-                system
-            },
-            metadata: {
-                totalUsers: (users.users || []).length,
-                totalLogs: logsData.length,
-                hasUsage: Object.keys(usageData).length > 0,
-                hasWarp: !!warp?.registered
-            }
-        };
-    } catch (e) {
-        throw new Error('خطا در دریافت اطلاعات کامل: ' + e.message);
-    }
-}
-
-// ========== 2. تابع ذخیره فایل بکاپ ==========
-function downloadBackup(data) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nova-full-backup-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-}
-
-// ========== 3. تابع بازیابی کامل ==========
-async function restoreFullBackup(file, env) {
-    const msg = document.getElementById('backup-msg');
-    if (!env || !env.DB) {
-        msg.textContent = '⚠️ D1 Database not connected!';
-        msg.style.color = 'var(--dg)';
-        return;
+                data: {
+                    config,
+                    network,
+                    users: users.users || [],
+                    warp,
+                    tg,
+                    // ====== داده‌های D1 ======
+                    d1: {
+                        usage: usageData,
+                        usageDay: usageDayData,
+                        usageIO: usageIOData,
+                        logs: logsData
+                    },
+                    // ====== داده‌های KV ======
+                    kv: kvData,
+                    system
+                },
+                metadata: {
+                    totalUsers: (users.users || []).length,
+                    totalLogs: logsData.length,
+                    hasUsage: Object.keys(usageData).length > 0,
+                    hasWarp: !!warp?.registered
+                }
+            };
+        } catch (e) {
+            throw new Error('خطا در دریافت اطلاعات کامل: ' + e.message);
+        }
     }
 
-    try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-
-        if (!data.version || !data.data || data.type !== 'FULL_BACKUP_D1') {
-            throw new Error('فایل بکاپ کامل نامعتبر است');
-        }
-
-        const migrationMode = document.getElementById('t2-migration')?.classList.contains('on') || false;
-        const preserveUsers = document.getElementById('t2-preserve-users')?.classList.contains('on') || false;
-
-        msg.textContent = 'در حال بازیابی کامل...';
-        msg.style.color = 'var(--mu)';
-
-        let { config, network, users, warp, tg, d1, kv } = data.data;
-
-        // ========== 1. ذخیره Config ==========
-        if (config) {
-            await env.KV.put('config.json', JSON.stringify(config, null, 2));
-        }
-
-        // ========== 2. ذخیره Network Settings ==========
-        if (network) {
-            await env.KV.put('network-settings.json', JSON.stringify(network, null, 2));
-        }
-
-        // ========== 3. ذخیره کاربران ==========
-        if (users && users.length > 0) {
-            let finalUsers = users;
-            if (preserveUsers) {
-                const existing = await env.KV.get('users.json');
-                const existingData = existing ? JSON.parse(existing) : { users: [] };
-                const existingIds = new Set(existingData.users.map(u => u.id));
-                const newUsers = users.filter(u => !existingIds.has(u.id));
-                finalUsers = [...existingData.users, ...newUsers];
-            }
-            await env.KV.put('users.json', JSON.stringify({ users: finalUsers }, null, 2));
-        }
-
-        // ========== 4. بازیابی مصرف از D1 ==========
-        if (d1 && env.DB && typeof env.DB.prepare === 'function') {
-            console.log('📊 Restoring usage data to D1...');
-            
-            // 4.1 ذخیره مصرف کل
-            if (d1.usage) {
-                for (const [userId, total] of Object.entries(d1.usage)) {
-                    const up = d1.usageIO?.[userId]?.up || 0;
-                    const down = d1.usageIO?.[userId]?.down || 0;
-                    await env.DB.prepare(
-                        'INSERT INTO usage (k, up, down, total) VALUES (?, ?, ?, ?) ON CONFLICT(k) DO UPDATE SET up=?, down=?, total=?'
-                    ).bind('uusage:' + userId, up, down, total, up, down, total).run();
-                }
-                console.log('✅ Usage restored:', Object.keys(d1.usage).length);
-            }
-
-            // 4.2 ذخیره مصرف روزانه
-            if (d1.usageDay) {
-                for (const [userId, days] of Object.entries(d1.usageDay)) {
-                    for (const [day, total] of Object.entries(days)) {
-                        await env.DB.prepare(
-                            'INSERT INTO usage (k, up, down, total) VALUES (?, 0, 0, ?) ON CONFLICT(k) DO UPDATE SET total=?'
-                        ).bind('uusage-d:' + userId + ':' + day, total, total).run();
-                    }
-                }
-                console.log('✅ UsageDay restored');
-            }
-
-            // 4.3 ذخیره لاگ‌ها
-            if (d1.logs && d1.logs.length > 0) {
-                for (const log of d1.logs) {
-                    await env.DB.prepare(
-                        'INSERT INTO logs (TYPE, IP, ASN, CC, URL, UA, TIME) VALUES (?, ?, ?, ?, ?, ?, ?)'
-                    ).bind(log.TYPE, log.IP, log.ASN, log.CC, log.URL, log.UA, log.TIME).run();
-                }
-                console.log('✅ Logs restored:', d1.logs.length);
-            }
-        }
-
-        // ========== 5. ذخیره WARP ==========
-        if (warp && !migrationMode) {
-            await env.KV.put('warp-account.json', JSON.stringify(warp, null, 2));
-        }
-
-        // ========== 6. ذخیره تلگرام ==========
-        if (tg && !migrationMode) {
-            await env.KV.put('tg.json', JSON.stringify(tg, null, 2));
-        }
-
-        msg.textContent = `✅ بازیابی کامل انجام شد (${Object.keys(d1?.usage || {}).length} کاربر با مصرف)`;
-        msg.style.color = 'var(--ok)';
-        toast('✅ بازیابی کامل انجام شد');
-
-        // رفرش صفحه
-        setTimeout(() => location.reload(), 1500);
-
-    } catch (e) {
-        msg.textContent = '⚠️ ' + (lang === 'fa' ? 'خطا در بازیابی: ' : 'Restore error: ') + e.message;
-        msg.style.color = 'var(--dg)';
-        console.error('Restore error:', e);
+    // ========== 2. تابع ذخیره فایل بکاپ ==========
+    function downloadBackup(data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nova-full-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     }
-}
 
-// ========== 4. راه‌اندازی دکمه‌های بکاپ ==========
-function setupBackupButtons(env) {
-    // دکمه اکسپورت
-    const exportBtn = document.getElementById('backup-export2');
-    if (exportBtn) {
-        exportBtn.onclick = async function() {
-            const msg = document.getElementById('backup-msg');
-            msg.textContent = 'در حال آماده‌سازی بکاپ کامل...';
+    // ========== 3. تابع بازیابی کامل ==========
+    async function restoreFullBackup(file, env) {
+        const msg = document.getElementById('backup-msg');
+        if (!env || !env.DB) {
+            msg.textContent = '⚠️ D1 Database not connected!';
+            msg.style.color = 'var(--dg)';
+            return;
+        }
+
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+
+            if (!data.version || !data.data || data.type !== 'FULL_BACKUP_D1') {
+                throw new Error('فایل بکاپ کامل نامعتبر است');
+            }
+
+            const migrationMode = document.getElementById('t2-migration')?.classList.contains('on') || false;
+            const preserveUsers = document.getElementById('t2-preserve-users')?.classList.contains('on') || false;
+
+            msg.textContent = 'در حال بازیابی کامل...';
             msg.style.color = 'var(--mu)';
-            try {
-                const data = await fetchFullBackup(env);
-                downloadBackup(data);
-                msg.textContent = `✅ بکاپ کامل ذخیره شد (${data.metadata.totalUsers} کاربر، ${Object.keys(data.data.d1?.usage || {}).length} با مصرف)`;
-                msg.style.color = 'var(--ok)';
-            } catch (e) {
-                msg.textContent = '⚠️ ' + e.message;
-                msg.style.color = 'var(--dg)';
+
+            let { config, network, users, warp, tg, d1, kv } = data.data;
+
+            // ========== 1. ذخیره Config ==========
+            if (config) {
+                await env.KV.put('config.json', JSON.stringify(config, null, 2));
             }
-        };
+
+            // ========== 2. ذخیره Network Settings ==========
+            if (network) {
+                await env.KV.put('network-settings.json', JSON.stringify(network, null, 2));
+            }
+
+            // ========== 3. ذخیره کاربران ==========
+            if (users && users.length > 0) {
+                let finalUsers = users;
+                if (preserveUsers) {
+                    const existing = await env.KV.get('users.json');
+                    const existingData = existing ? JSON.parse(existing) : { users: [] };
+                    const existingIds = new Set(existingData.users.map(u => u.id));
+                    const newUsers = users.filter(u => !existingIds.has(u.id));
+                    finalUsers = [...existingData.users, ...newUsers];
+                }
+                await env.KV.put('users.json', JSON.stringify({ users: finalUsers }, null, 2));
+            }
+
+            // ========== 4. بازیابی مصرف از D1 ==========
+            if (d1 && env.DB && typeof env.DB.prepare === 'function') {
+                console.log('📊 Restoring usage data to D1...');
+                
+                // 4.1 ذخیره مصرف کل
+                if (d1.usage) {
+                    for (const [userId, total] of Object.entries(d1.usage)) {
+                        const up = d1.usageIO?.[userId]?.up || 0;
+                        const down = d1.usageIO?.[userId]?.down || 0;
+                        await env.DB.prepare(
+                            'INSERT INTO usage (k, up, down, total) VALUES (?, ?, ?, ?) ON CONFLICT(k) DO UPDATE SET up=?, down=?, total=?'
+                        ).bind('uusage:' + userId, up, down, total, up, down, total).run();
+                    }
+                    console.log('✅ Usage restored:', Object.keys(d1.usage).length);
+                }
+
+                // 4.2 ذخیره مصرف روزانه
+                if (d1.usageDay) {
+                    for (const [userId, days] of Object.entries(d1.usageDay)) {
+                        for (const [day, total] of Object.entries(days)) {
+                            await env.DB.prepare(
+                                'INSERT INTO usage (k, up, down, total) VALUES (?, 0, 0, ?) ON CONFLICT(k) DO UPDATE SET total=?'
+                            ).bind('uusage-d:' + userId + ':' + day, total, total).run();
+                        }
+                    }
+                    console.log('✅ UsageDay restored');
+                }
+
+                // 4.3 ذخیره لاگ‌ها
+                if (d1.logs && d1.logs.length > 0) {
+                    for (const log of d1.logs) {
+                        await env.DB.prepare(
+                            'INSERT INTO logs (TYPE, IP, ASN, CC, URL, UA, TIME) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                        ).bind(log.TYPE, log.IP, log.ASN, log.CC, log.URL, log.UA, log.TIME).run();
+                    }
+                    console.log('✅ Logs restored:', d1.logs.length);
+                }
+            }
+
+            // ========== 5. ذخیره WARP ==========
+            if (warp && !migrationMode) {
+                await env.KV.put('warp-account.json', JSON.stringify(warp, null, 2));
+            }
+
+            // ========== 6. ذخیره تلگرام ==========
+            if (tg && !migrationMode) {
+                await env.KV.put('tg.json', JSON.stringify(tg, null, 2));
+            }
+
+            msg.textContent = `✅ بازیابی کامل انجام شد (${Object.keys(d1?.usage || {}).length} کاربر با مصرف)`;
+            msg.style.color = 'var(--ok)';
+            toast('✅ بازیابی کامل انجام شد');
+
+            // رفرش صفحه
+            setTimeout(() => location.reload(), 1500);
+
+        } catch (e) {
+            msg.textContent = '⚠️ ' + e.message;
+            msg.style.color = 'var(--dg)';
+            console.error('Restore error:', e);
+        }
     }
 
-    // دکمه ایمپورت
-    const importBtn = document.getElementById('backup-import2');
-    const fileInput = document.getElementById('backup-file2');
-    if (importBtn && fileInput) {
-        importBtn.onclick = () => fileInput.click();
-        fileInput.onchange = (e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-                restoreFullBackup(file, env);
-                fileInput.value = '';
-            }
-        };
-    }
-}
+    // ========== 4. راه‌اندازی دکمه‌های بکاپ ==========
+    function setupBackupButtons(env) {
+        // دکمه اکسپورت
+        const exportBtn = document.getElementById('backup-export2');
+        if (exportBtn) {
+            exportBtn.onclick = async function() {
+                const msg = document.getElementById('backup-msg');
+                msg.textContent = 'در حال آماده‌سازی بکاپ کامل...';
+                msg.style.color = 'var(--mu)';
+                try {
+                    const data = await fetchFullBackup(env);
+                    downloadBackup(data);
+                    msg.textContent = `✅ بکاپ کامل ذخیره شد (${data.metadata.totalUsers} کاربر، ${Object.keys(data.data.d1?.usage || {}).length} با مصرف)`;
+                    msg.style.color = 'var(--ok)';
+                } catch (e) {
+                    msg.textContent = '⚠️ ' + e.message;
+                    msg.style.color = 'var(--dg)';
+                }
+            };
+        }
 
-// اجرا در زمان بارگذاری
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setupBackupButtons(_globalEnv);
-} else {
-    document.addEventListener('DOMContentLoaded', () => setupBackupButtons(_globalEnv));
-}
+        // دکمه ایمپورت
+        const importBtn = document.getElementById('backup-import2');
+        const fileInput = document.getElementById('backup-file2');
+        if (importBtn && fileInput) {
+            importBtn.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                    restoreFullBackup(file, env);
+                    fileInput.value = '';
+                }
+            };
+        }
+    }
+
+    // اجرا در زمان بارگذاری
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setupBackupButtons(_globalEnv);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => setupBackupButtons(_globalEnv));
+    }
 </script>
 </body>
 </html>
