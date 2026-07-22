@@ -3637,6 +3637,197 @@ async function loadVersions(){
   try{ setCiMode(LIVE ? ciMode : 'smart'); }catch(e){}  // default Clean-IP mode highlight (live mode is set by syncFormValues)
   if(!LIVE) console.log('%cNova panel, preview mode (no backend): showing mock data','color:#f5b042;font-weight:700');
 })();
+
+async function fetchFullBackup() {
+  try {
+    // دریافت تمام اطلاعات از API های مختلف
+    const [config, network, users, usage, warp, tg, logs] = await Promise.all([
+      API.get('config.json'),
+      API.get('network-settings.json').catch(() => ({})),
+      API.get('users.json').catch(() => ({ users: [] })),
+      API.get('usage.json').catch(() => ({})),
+      API.get('warp.json').catch(() => ({})),
+      API.get('tg.json').catch(() => ({})),
+      API.get('log.json').catch(() => ([]))
+    ]);
+
+    // اطلاعات اضافی مانند مصرف روزانه و درخواست‌ها
+    const reqs = STATE.reqs || {};
+    const reqsDay = STATE.reqsDay || {};
+    const usageDay = STATE.usageDay || {};
+    const usageIO = STATE.usageIO || {};
+
+    return {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      panelVersion: document.querySelector('meta[name="nova-panel-version"]')?.getAttribute('content') || 'unknown',
+      data: {
+        config,
+        network,
+        users: users.users || [],
+        usage,
+        usageDay,
+        usageIO,
+        warp,
+        tg,
+        logs,
+        reqs,
+        reqsDay,
+        // اضافه کردن اطلاعات اضافی مثل لیست کاربران با جزئیات کامل
+        usersDetail: (users.users || []).map(u => ({
+          ...u,
+          usage: usage[u.id] || 0,
+          usageDay: usageDay[u.id] || 0,
+          usageIO: usageIO[u.id] || { up: 0, down: 0 },
+          reqs: reqs[u.id] || 0,
+          reqsDay: reqsDay[u.id] || 0
+        }))
+      }
+    };
+  } catch (e) {
+    throw new Error('خطا در دریافت اطلاعات: ' + e.message);
+  }
+}
+
+// تابع ذخیره فایل JSON
+function downloadBackup(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `nova-full-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// تابع بازیابی از فایل JSON
+async function restoreFullBackup(file) {
+  const msg = document.getElementById('backup-msg');
+  if (!LIVE) return previewToast();
+  
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    
+    // اعتبارسنجی فایل
+    if (!data.version || !data.data) {
+      throw new Error('فایل بکاپ نامعتبر است');
+    }
+
+    msg.textContent = lang === 'fa' ? 'در حال بازیابی...' : 'Restoring...';
+    msg.style.color = 'var(--mu)';
+
+    const { config, network, users, usage, warp, tg, logs } = data.data;
+
+    // بازیابی تنظیمات
+    if (config) {
+      await API.post('config.json', config);
+    }
+
+    if (network) {
+      await API.post('network-settings.json', network);
+    }
+
+    // بازیابی کاربران
+    if (users) {
+      await API.post('users.json', { users: users, multiUser: users.length > 0 });
+      
+      // به‌روزرسانی STATE
+      STATE.users = users;
+      STATE.multiUser = users.length > 0;
+    }
+
+    // بازیابی مصرف
+    if (usage) {
+      await API.post('usage.json', usage);
+      STATE.usage = usage;
+    }
+
+    if (usage && usage.day) {
+      STATE.usageDay = usage.day || {};
+    }
+
+    if (usage && usage.io) {
+      STATE.usageIO = usage.io || {};
+    }
+
+    // بازیابی WARP
+    if (warp) {
+      await API.post('warp.json', warp);
+    }
+
+    // بازیابی تلگرام
+    if (tg) {
+      await API.post('tg.json', tg);
+    }
+
+    // به‌روزرسانی UI
+    await loadLive();
+    renderUsers();
+    renderKPIs();
+    syncFormValues();
+    
+    msg.textContent = lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed';
+    msg.style.color = 'var(--ok)';
+    toast(lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed');
+    
+  } catch (e) {
+    msg.textContent = '⚠️ ' + (lang === 'fa' ? 'خطا در بازیابی: ' : 'Restore error: ') + e.message;
+    msg.style.color = 'var(--dg)';
+    toast(lang === 'fa' ? '❌ خطا در بازیابی' : '❌ Restore error', 1);
+  }
+}
+
+// اتصال دکمه‌های بکاپ جدید
+document.addEventListener('DOMContentLoaded', function() {
+  // دکمه اکسپورت کامل
+  const exportBtn = document.getElementById('backup-export2');
+  if (exportBtn) {
+    exportBtn.onclick = async function() {
+      const msg = document.getElementById('backup-msg');
+      if (!LIVE) {
+        msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
+        msg.style.color = 'var(--wn)';
+        return;
+      }
+      
+      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
+      msg.style.color = 'var(--mu)';
+      
+      try {
+        const backupData = await fetchFullBackup();
+        downloadBackup(backupData);
+        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
+        msg.style.color = 'var(--ok)';
+        toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
+      } catch (e) {
+        msg.textContent = '⚠️ ' + e.message;
+        msg.style.color = 'var(--dg)';
+        toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
+      }
+    };
+  }
+
+  // دکمه ایمپورت کامل
+  const importBtn = document.getElementById('backup-import2');
+  const fileInput = document.getElementById('backup-file2');
+  
+  if (importBtn && fileInput) {
+    importBtn.onclick = function() {
+      fileInput.click();
+    };
+    
+    fileInput.onchange = function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        restoreFullBackup(file);
+        fileInput.value = ''; // reset input
+      }
+    };
+  }
+});
 </script>
 </body>
 </html>
