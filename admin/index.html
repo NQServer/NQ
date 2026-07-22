@@ -3654,14 +3654,50 @@ async function loadVersions(){
 })();
 
 // ==============================================
-// بخش بکاپ و مهاجرت کامل - نسخه نهایی با ذخیره دائمی
+// بخش بکاپ کامل - کل دیتابیس و KV
 // ==============================================
 
-// تابع دریافت تمام اطلاعات از سرور
+// ========== 1. تابع دریافت کامل تمام داده‌ها ==========
 async function fetchFullBackup() {
   try {
-    // دریافت تمام اطلاعات از API های مختلف
-    const [config, network, users, usage, warp, tg, logs, system] = await Promise.all([
+    // لیست تمام کلیدهای KV که باید بکاپ گرفته شوند
+    const kvKeys = [
+      'config',
+      'network_settings', 
+      'users',
+      'usage',
+      'usage_day',
+      'usage_io',
+      'warp',
+      'tg',
+      'log',
+      'ADD',
+      'system',
+      'clean_ips',
+      'subscription',
+      'mirror_cache',
+      'user_tokens'
+    ];
+    
+    // دریافت تمام داده‌ها از KV
+    const kvData = {};
+    for (const key of kvKeys) {
+      try {
+        const resp = await fetch(`/admin/kv/${key}?_t=${Date.now()}`, { cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          kvData[key] = data;
+        } else {
+          kvData[key] = null;
+        }
+      } catch (e) {
+        kvData[key] = null;
+        console.warn(`⚠️ Could not fetch KV key: ${key}`);
+      }
+    }
+    
+    // دریافت تمام اطلاعات از D1 (از طریق API های موجود)
+    const [config, network, users, usage, warp, tg, logs, system, usageDay, usageIO] = await Promise.all([
       API.get('config.json').catch(() => ({})),
       API.get('network-settings.json').catch(() => ({})),
       API.get('users.json').catch(() => ({ users: [] })),
@@ -3669,25 +3705,28 @@ async function fetchFullBackup() {
       API.get('warp.json').catch(() => ({})),
       API.get('tg.json').catch(() => ({})),
       API.get('log.json').catch(() => ([])),
-      API.get('system.json').catch(() => ({}))
+      API.get('system.json').catch(() => ({})),
+      API.get('usage-day.json').catch(() => ({})),
+      API.get('usage-io.json').catch(() => ({}))
     ]);
 
-    // اطلاعات اضافی مانند مصرف روزانه و درخواست‌ها
+    // اطلاعات اضافی
     const reqs = STATE.reqs || {};
     const reqsDay = STATE.reqsDay || {};
-    const usageDay = STATE.usageDay || {};
-    const usageIO = STATE.usageIO || {};
 
     return {
-      version: '2.0',
+      version: '3.0',
+      type: 'FULL_BACKUP',
       exportedAt: new Date().toISOString(),
       panelVersion: document.querySelector('meta[name="nova-panel-version"]')?.getAttribute('content') || 'unknown',
       sourceWorker: {
         host: location.host,
         origin: location.origin,
-        system: system
+        instanceId: system?.instanceId || 'unknown',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       },
       data: {
+        // D1 Data
         config,
         network,
         users: users.users || [],
@@ -3697,8 +3736,13 @@ async function fetchFullBackup() {
         warp,
         tg,
         logs: logs.slice(0, 1000),
+        system,
+        // KV Data
+        kv: kvData,
+        // State Data
         reqs,
         reqsDay,
+        // Users with full details
         usersDetail: (users.users || []).map(u => ({
           ...u,
           usage: usage[u.id] || 0,
@@ -3707,14 +3751,23 @@ async function fetchFullBackup() {
           reqs: reqs[u.id] || 0,
           reqsDay: reqsDay[u.id] || 0
         }))
+      },
+      // Metadata برای بازیابی
+      metadata: {
+        totalUsers: (users.users || []).length,
+        totalLogs: (logs || []).length,
+        totalKvKeys: Object.keys(kvData).length,
+        hasUsage: Object.keys(usage || {}).length > 0,
+        hasWarp: !!warp?.registered,
+        hasTelegram: !!tg?.BotToken
       }
     };
   } catch (e) {
-    throw new Error('خطا در دریافت اطلاعات: ' + e.message);
+    throw new Error('خطا در دریافت اطلاعات کامل: ' + e.message);
   }
 }
 
-// تابع ذخیره فایل JSON
+// ========== 2. تابع ذخیره فایل بکاپ ==========
 function downloadBackup(data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -3727,143 +3780,122 @@ function downloadBackup(data) {
   URL.revokeObjectURL(url);
 }
 
-// تابع تطبیق تنظیمات برای ورکر جدید
+// ========== 3. تابع تطبیق تنظیمات برای ورکر جدید ==========
 function adaptConfigForNewWorker(data, migrationMode) {
   if (!migrationMode) return data;
   
   const adapted = JSON.parse(JSON.stringify(data));
   const currentHost = location.host;
+  const currentOrigin = location.origin;
   
-  // 1. به‌روزرسانی HOSTS
-  if (adapted.config && adapted.config.HOSTS && Array.isArray(adapted.config.HOSTS)) {
-    if (!adapted.config.HOSTS.includes(currentHost)) {
-      adapted.config.HOSTS = [currentHost, ...adapted.config.HOSTS];
+  // 1. به‌روزرسانی HOSTS و HOST
+  if (adapted.data?.config) {
+    const config = adapted.data.config;
+    
+    if (config.HOSTS && Array.isArray(config.HOSTS)) {
+      if (!config.HOSTS.includes(currentHost)) {
+        config.HOSTS = [currentHost, ...config.HOSTS];
+      }
     }
-  }
-  
-  // 2. به‌روزرسانی HOST
-  if (adapted.config && adapted.config.HOST) {
-    const oldHost = adapted.config.HOST;
-    if (oldHost !== currentHost) {
-      adapted.config.HOST = currentHost;
-      adapted.config._previousHost = oldHost;
+    
+    if (config.HOST && config.HOST !== currentHost) {
+      config._previousHost = config.HOST;
+      config.HOST = currentHost;
     }
-  }
-  
-  // 3. به‌روزرسانی مسیرهای استتار (ریست می‌شوند)
-  if (adapted.network && adapted.network.disguise) {
-    if (adapted.network.adminPath) {
-      adapted.network._previousAdminPath = adapted.network.adminPath;
-      adapted.network.adminPath = '';
+    
+    // 2. به‌روزرسانی مسیرهای استتار (ریست)
+    if (adapted.data?.network?.disguise) {
+      const net = adapted.data.network;
+      if (net.adminPath) {
+        net._previousAdminPath = net.adminPath;
+        net.adminPath = '';
+      }
+      if (net.loginPath) {
+        net._previousLoginPath = net.loginPath;
+        net.loginPath = '';
+      }
+      if (net.subPath) {
+        net._previousSubPath = net.subPath;
+        net.subPath = '';
+      }
     }
-    if (adapted.network.loginPath) {
-      adapted.network._previousLoginPath = adapted.network.loginPath;
-      adapted.network.loginPath = '';
+    
+    // 3. به‌روزرسانی Backend URL
+    if (adapted.data?.network?.backendUrl) {
+      const oldUrl = adapted.data.network.backendUrl;
+      if (oldUrl.includes('://') && !oldUrl.includes(currentHost)) {
+        try {
+          const url = new URL(oldUrl);
+          if (url.hostname === data.sourceWorker?.host || url.hostname === config._previousHost) {
+            url.hostname = currentHost;
+            adapted.data.network.backendUrl = url.toString();
+            adapted.data.network._previousBackendUrl = oldUrl;
+          }
+        } catch (e) {}
+      }
     }
-    if (adapted.network.subPath) {
-      adapted.network._previousSubPath = adapted.network.subPath;
-      adapted.network.subPath = '';
+    
+    // 4. حذف توکن‌های حساس
+    if (config.mirror?.token) {
+      config.mirror._previousToken = '***REMOVED***';
+      config.mirror.token = '';
     }
-  }
-  
-  // 4. به‌روزرسانی Backend
-  if (adapted.network && adapted.network.backendUrl) {
-    const oldUrl = adapted.network.backendUrl;
-    if (oldUrl.includes('://') && !oldUrl.includes(currentHost)) {
-      try {
-        const url = new URL(oldUrl);
-        if (url.hostname === adapted.sourceWorker?.host || url.hostname === adapted._previousHost) {
-          url.hostname = currentHost;
-          adapted.network.backendUrl = url.toString();
-          adapted.network._previousBackendUrl = oldUrl;
-        }
-      } catch (e) {}
+    
+    // 5. به‌روزرسانی ECH SNI
+    if (config.ECHConfig?.SNI) {
+      const oldSNI = config.ECHConfig.SNI;
+      if (oldSNI && oldSNI !== currentHost && 
+          (oldSNI.includes(data.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
+        config.ECHConfig.SNI = currentHost;
+        config.ECHConfig._previousSNI = oldSNI;
+      }
     }
-  }
-  
-  // 5. حذف توکن GitHub Mirror
-  if (adapted.config && adapted.config.mirror) {
-    if (adapted.config.mirror.token) {
-      adapted.config.mirror._previousToken = '***REMOVED***';
-      adapted.config.mirror.token = '';
-    }
-  }
-  
-  // 6. به‌روزرسانی ECH SNI
-  if (adapted.config && adapted.config.ECHConfig && adapted.config.ECHConfig.SNI) {
-    const oldSNI = adapted.config.ECHConfig.SNI;
-    if (oldSNI && oldSNI !== currentHost && 
-        (oldSNI.includes(adapted.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
-      adapted.config.ECHConfig.SNI = currentHost;
-      adapted.config.ECHConfig._previousSNI = oldSNI;
-    }
-  }
-  
-  // 7. غیرفعال کردن Central API
-  if (adapted.config && adapted.config.centralApi) {
-    const oldApi = adapted.config.centralApi;
-    if (oldApi.includes(adapted.sourceWorker?.host) || oldApi.includes('novaproxy')) {
-      adapted.config.centralApi = '';
-      adapted.config._previousCentralApi = oldApi;
+    
+    // 6. غیرفعال کردن Central API
+    if (config.centralApi && config.centralApi.includes(data.sourceWorker?.host)) {
+      config._previousCentralApi = config.centralApi;
+      config.centralApi = '';
     }
   }
   
   return adapted;
 }
 
-// تابع ذخیره دائمی مصرف کاربران
+// ========== 4. تابع ذخیره مصرف در KV ==========
 async function saveUserUsageData(usage, usageDay, usageIO) {
   const results = [];
   
-  // 1. ذخیره مصرف کل
-  if (usage && Object.keys(usage).length > 0) {
-    try {
-      const resp = await fetch('/admin/usage.json', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(usage)
-      });
-      results.push({ type: 'usage', ok: resp.ok });
-      if (resp.ok) STATE.usage = usage;
-    } catch (e) {
-      results.push({ type: 'usage', ok: false, error: e.message });
-    }
-  }
+  // ذخیره در مسیرهای مختلف
+  const endpoints = [
+    { url: '/admin/usage.json', data: usage, key: 'usage' },
+    { url: '/admin/usage-day.json', data: usageDay, key: 'usageDay' },
+    { url: '/admin/usage-io.json', data: usageIO, key: 'usageIO' }
+  ];
   
-  // 2. ذخیره مصرف روزانه
-  if (usageDay && Object.keys(usageDay).length > 0) {
-    try {
-      const resp = await fetch('/admin/usage-day.json', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(usageDay)
-      });
-      results.push({ type: 'usageDay', ok: resp.ok });
-      if (resp.ok) STATE.usageDay = usageDay;
-    } catch (e) {
-      results.push({ type: 'usageDay', ok: false, error: e.message });
-    }
-  }
-  
-  // 3. ذخیره مصرف IO
-  if (usageIO && Object.keys(usageIO).length > 0) {
-    try {
-      const resp = await fetch('/admin/usage-io.json', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(usageIO)
-      });
-      results.push({ type: 'usageIO', ok: resp.ok });
-      if (resp.ok) STATE.usageIO = usageIO;
-    } catch (e) {
-      results.push({ type: 'usageIO', ok: false, error: e.message });
+  for (const ep of endpoints) {
+    if (ep.data && Object.keys(ep.data).length > 0) {
+      try {
+        const resp = await fetch(ep.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ep.data)
+        });
+        results.push({ type: ep.key, ok: resp.ok });
+        if (resp.ok) {
+          if (ep.key === 'usage') STATE.usage = ep.data;
+          if (ep.key === 'usageDay') STATE.usageDay = ep.data;
+          if (ep.key === 'usageIO') STATE.usageIO = ep.data;
+        }
+      } catch (e) {
+        results.push({ type: ep.key, ok: false, error: e.message });
+      }
     }
   }
   
   return results;
 }
 
-// تابع بازیابی از فایل JSON (نسخه کامل با ذخیره دائمی)
+// ========== 5. تابع بازیابی کامل ==========
 async function restoreFullBackup(file) {
   const msg = document.getElementById('backup-msg');
   if (!LIVE) {
@@ -3877,35 +3909,40 @@ async function restoreFullBackup(file) {
     const data = JSON.parse(text);
     
     // اعتبارسنجی فایل
-    if (!data.version || !data.data) {
-      throw new Error('فایل بکاپ نامعتبر است');
+    if (!data.version || !data.data || data.type !== 'FULL_BACKUP') {
+      throw new Error('فایل بکاپ کامل نامعتبر است. لطفاً از دکمه Export استفاده کنید.');
     }
 
     // بررسی حالت مهاجرت
     const migrationMode = document.getElementById('t2-migration')?.classList.contains('on') || false;
     const preserveUsers = document.getElementById('t2-preserve-users')?.classList.contains('on') || false;
     
-    msg.textContent = lang === 'fa' ? 'در حال بازیابی...' : 'Restoring...';
+    msg.textContent = lang === 'fa' ? 'در حال بازیابی کامل...' : 'Restoring full backup...';
     msg.style.color = 'var(--mu)';
-
-    let { config, network, users, usage, warp, tg, logs } = data.data;
     
-    // ============== اعمال مهاجرت ==============
+    console.log('🔄 Starting full restore...', {
+      version: data.version,
+      exportedAt: data.exportedAt,
+      sourceHost: data.sourceWorker?.host,
+      migrationMode,
+      preserveUsers
+    });
+
+    let { config, network, users, usage, warp, tg, logs, system, kv } = data.data;
+    
+    // ========== اعمال مهاجرت ==========
     if (migrationMode) {
       const adapted = adaptConfigForNewWorker(data, true);
-      config = adapted.config;
-      network = adapted.network;
+      config = adapted.data?.config || config;
+      network = adapted.data?.network || network;
       
       console.log('🔄 Migration applied:', {
         previousHost: config?._previousHost || 'unknown',
-        currentHost: location.host,
-        adapted: true
+        currentHost: location.host
       });
     }
 
-    // ============== ذخیره تنظیمات ==============
-    
-    // 1. ذخیره Config
+    // ========== 1. ذخیره Config ==========
     if (config) {
       const cleanConfig = { ...config };
       delete cleanConfig._previousHost;
@@ -3919,9 +3956,10 @@ async function restoreFullBackup(file) {
       }
       await API.post('config.json', cleanConfig);
       STATE.config = cleanConfig;
+      console.log('✅ Config restored');
     }
 
-    // 2. ذخیره Network Settings
+    // ========== 2. ذخیره Network Settings ==========
     if (network) {
       const cleanNetwork = { ...network };
       delete cleanNetwork._previousAdminPath;
@@ -3930,9 +3968,10 @@ async function restoreFullBackup(file) {
       delete cleanNetwork._previousBackendUrl;
       await API.post('network-settings.json', cleanNetwork);
       STATE.net = cleanNetwork;
+      console.log('✅ Network settings restored');
     }
 
-    // 3. ذخیره کاربران
+    // ========== 3. ذخیره کاربران ==========
     if (users && users.length > 0) {
       let finalUsers = users;
       
@@ -3941,6 +3980,7 @@ async function restoreFullBackup(file) {
         const existingIds = new Set(currentUsers.map(u => u.id));
         const newUsers = users.filter(u => !existingIds.has(u.id));
         finalUsers = [...currentUsers, ...newUsers];
+        console.log(`👥 Merged users: ${currentUsers.length} existing + ${newUsers.length} new = ${finalUsers.length} total`);
       }
       
       await API.post('users.json', { 
@@ -3949,17 +3989,17 @@ async function restoreFullBackup(file) {
       });
       STATE.users = finalUsers;
       STATE.multiUser = finalUsers.length > 0;
+      console.log('✅ Users restored');
     }
 
-    // ============== بازیابی مصرف کاربران (ذخیره دائمی) ==============
+    // ========== 4. ذخیره مصرف کاربران ==========
     console.log('📊 Restoring user usage data...');
     
-    // آماده‌سازی داده‌های مصرف
     const newUsage = {};
     const newUsageDay = {};
     const newUsageIO = {};
     
-    // اگر usageIO موجود است، مجموع up+down را به عنوان مصرف کل در نظر بگیر
+    // محاسبه مصرف از IO
     if (data.data.usageIO) {
       for (const [userId, io] of Object.entries(data.data.usageIO)) {
         if (io && typeof io === 'object') {
@@ -3970,14 +4010,14 @@ async function restoreFullBackup(file) {
       }
     }
     
-    // اگر usageDay موجود است، آن را هم ذخیره کن
+    // اضافه کردن مصرف روزانه
     if (data.data.usageDay) {
       for (const [userId, day] of Object.entries(data.data.usageDay)) {
         newUsageDay[userId] = day || 0;
       }
     }
     
-    // اگر usage اصلی موجود است، آن را به‌روزرسانی کن
+    // اضافه کردن usage اصلی
     if (usage && typeof usage === 'object') {
       for (const [userId, total] of Object.entries(usage)) {
         if (!newUsage[userId]) {
@@ -3986,54 +4026,87 @@ async function restoreFullBackup(file) {
       }
     }
     
-    // ========== ذخیره داده‌های مصرف در سرور ==========
+    // ذخیره در KV
     const saveResults = await saveUserUsageData(newUsage, newUsageDay, newUsageIO);
-    
-    // نمایش نتیجه ذخیره‌سازی
     const allOk = saveResults.every(r => r.ok);
-    if (!allOk) {
+    if (allOk) {
+      console.log('✅ Usage data saved to KV:', {
+        users: Object.keys(newUsage).length,
+        usageIO: Object.keys(newUsageIO).length,
+        usageDay: Object.keys(newUsageDay).length
+      });
+    } else {
       console.warn('⚠️ Some usage data failed to save:', saveResults.filter(r => !r.ok));
     }
-    
-    // 4. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
+
+    // ========== 5. ذخیره KV Data ==========
+    if (kv) {
+      console.log('💾 Restoring KV data...');
+      let kvRestored = 0;
+      for (const [key, value] of Object.entries(kv)) {
+        if (value !== null) {
+          try {
+            // ذخیره هر کلید KV
+            const resp = await fetch(`/admin/kv/${key}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(value)
+            });
+            if (resp.ok) kvRestored++;
+          } catch (e) {
+            console.warn(`⚠️ Could not restore KV key: ${key}`, e);
+          }
+        }
+      }
+      console.log(`✅ ${kvRestored} KV keys restored`);
+    }
+
+    // ========== 6. ذخیره WARP ==========
     if (warp && !migrationMode) {
       await API.post('warp.json', warp);
+      console.log('✅ WARP config restored');
     }
 
-    // 5. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
+    // ========== 7. ذخیره تلگرام ==========
     if (tg && !migrationMode) {
       await API.post('tg.json', tg);
+      console.log('✅ Telegram config restored');
     }
 
-    // 6. به‌روزرسانی UI
+    // ========== 8. به‌روزرسانی UI ==========
     await loadLive();
     renderUsers();
     renderKPIs();
     syncFormValues();
     
     const userCount = Object.keys(STATE.usage).length;
+    const usageCount = Object.keys(newUsage).length;
+    
     const msgText = migrationMode 
-      ? (lang === 'fa' ? `✅ بازیابی با مهاجرت انجام شد (${userCount} کاربر با مصرف)` : `✅ Restore with migration completed (${userCount} users with usage)`)
-      : (lang === 'fa' ? `✅ بازیابی کامل انجام شد (${userCount} کاربر با مصرف)` : `✅ Full restore completed (${userCount} users with usage)`);
+      ? (lang === 'fa' ? 
+          `✅ بازیابی کامل با مهاجرت انجام شد (${userCount} کاربر، ${usageCount} با مصرف)` : 
+          `✅ Full restore with migration completed (${userCount} users, ${usageCount} with usage)`)
+      : (lang === 'fa' ? 
+          `✅ بازیابی کامل انجام شد (${userCount} کاربر، ${usageCount} با مصرف)` : 
+          `✅ Full restore completed (${userCount} users, ${usageCount} with usage)`);
     
     msg.textContent = msgText;
     msg.style.color = 'var(--ok)';
     toast(msgText);
     
+    console.log('🎉 Restore completed successfully!');
+    
   } catch (e) {
     msg.textContent = '⚠️ ' + (lang === 'fa' ? 'خطا در بازیابی: ' : 'Restore error: ') + e.message;
     msg.style.color = 'var(--dg)';
     toast(lang === 'fa' ? '❌ خطا در بازیابی' : '❌ Restore error', 1);
-    console.error('Restore error:', e);
+    console.error('❌ Restore error:', e);
   }
 }
 
-// ==============================================
-// راه‌اندازی و اتصال دکمه‌های بکاپ
-// ==============================================
-
+// ========== 9. راه‌اندازی دکمه‌های بکاپ ==========
 function setupBackupButtons() {
-  // دکمه اکسپورت کامل
+  // دکمه اکسپورت
   const exportBtn = document.getElementById('backup-export2');
   if (exportBtn) {
     exportBtn.onclick = async function() {
@@ -4044,13 +4117,15 @@ function setupBackupButtons() {
         return;
       }
       
-      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
+      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ کامل...' : 'Preparing full backup...';
       msg.style.color = 'var(--mu)';
       
       try {
         const backupData = await fetchFullBackup();
         downloadBackup(backupData);
-        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
+        msg.textContent = lang === 'fa' ? 
+          `✅ بکاپ کامل ذخیره شد (${backupData.metadata.totalUsers} کاربر، ${backupData.metadata.totalKvKeys} کلید KV)` : 
+          `✅ Full backup saved (${backupData.metadata.totalUsers} users, ${backupData.metadata.totalKvKeys} KV keys)`;
         msg.style.color = 'var(--ok)';
         toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
       } catch (e) {
@@ -4061,7 +4136,7 @@ function setupBackupButtons() {
     };
   }
 
-  // دکمه ایمپورت کامل
+  // دکمه ایمپورت
   const importBtn = document.getElementById('backup-import2');
   const fileInput = document.getElementById('backup-file2');
 
@@ -4080,11 +4155,7 @@ function setupBackupButtons() {
   }
 }
 
-// ==============================================
-// اجرای راه‌اندازی
-// ==============================================
-
-// اطمینان از اجرا پس از بارگذاری کامل صفحه
+// ========== 10. اجرا ==========
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   setupBackupButtons();
 } else {
