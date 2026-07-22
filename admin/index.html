@@ -1163,7 +1163,6 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
             </div>
           </div>
         </div>
-<!-- بخش Backup & maintenance را با کد زیر جایگزین کنید -->
 <div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
 <div class="card card-pad">
   <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
@@ -3654,7 +3653,7 @@ async function loadVersions(){
 })();
 
 // ==============================================
-// بخش بکاپ و مهاجرت کامل - نسخه تصحیح شده
+// بخش بکاپ و مهاجرت کامل - نسخه نهایی
 // ==============================================
 
 // تابع دریافت تمام اطلاعات از سرور
@@ -3698,10 +3697,9 @@ async function fetchFullBackup() {
         usageIO,
         warp,
         tg,
-        logs: logs.slice(0, 1000), // فقط 1000 لاگ آخر
+        logs: logs.slice(0, 1000),
         reqs,
         reqsDay,
-        // اضافه کردن اطلاعات کامل کاربران
         usersDetail: (users.users || []).map(u => ({
           ...u,
           usage: usage[u.id] || 0,
@@ -3740,27 +3738,22 @@ function adaptConfigForNewWorker(data, migrationMode) {
   
   // 1. به‌روزرسانی HOSTS
   if (adapted.config && adapted.config.HOSTS && Array.isArray(adapted.config.HOSTS)) {
-    // اگر HOSTS قبلی شامل دامنه فعلی نیست، دامنه فعلی را اضافه کن
     if (!adapted.config.HOSTS.includes(currentHost)) {
       adapted.config.HOSTS = [currentHost, ...adapted.config.HOSTS];
     }
   }
   
-  // 2. به‌روزرسانی HOST (مقدار اصلی)
+  // 2. به‌روزرسانی HOST
   if (adapted.config && adapted.config.HOST) {
-    // اگر HOST قبلی با دامنه فعلی متفاوت است، آن را به‌روز کن
     const oldHost = adapted.config.HOST;
     if (oldHost !== currentHost) {
       adapted.config.HOST = currentHost;
-      // ذخیره HOST قبلی برای مرجع
       adapted.config._previousHost = oldHost;
     }
   }
   
-  // 3. به‌روزرسانی مسیرهای استتار (Disguise)
+  // 3. به‌روزرسانی مسیرهای استتار
   if (adapted.network && adapted.network.disguise) {
-    // اگر در حالت مهاجرت هستیم، مسیرهای استتار را ریست می‌کنیم تا تداخل نداشته باشند
-    // کاربر می‌تواند بعداً دوباره تنظیم کند
     if (adapted.network.adminPath && adapted.network.adminPath.length > 0) {
       adapted.network._previousAdminPath = adapted.network.adminPath;
       adapted.network.adminPath = '';
@@ -3775,53 +3768,42 @@ function adaptConfigForNewWorker(data, migrationMode) {
     }
   }
   
-  // 4. به‌روزرسانی آدرس Backend
+  // 4. به‌روزرسانی Backend
   if (adapted.network && adapted.network.backendUrl) {
     const oldUrl = adapted.network.backendUrl;
-    // اگر Backend URL به دامنه قبلی اشاره دارد، به‌روزرسانی کن
     if (oldUrl.includes('://') && !oldUrl.includes(currentHost)) {
       try {
         const url = new URL(oldUrl);
-        // فقط اگر Backend روی همان دامنه بوده، تغییرش بده
         if (url.hostname === adapted.sourceWorker?.host || url.hostname === adapted._previousHost) {
           url.hostname = currentHost;
           adapted.network.backendUrl = url.toString();
           adapted.network._previousBackendUrl = oldUrl;
         }
-      } catch (e) {
-        // اگر URL معتبر نبود، تغییرش نده
-      }
+      } catch (e) {}
     }
   }
   
-  // 5. به‌روزرسانی GitHub Mirror
+  // 5. به‌روزرسانی GitHub Mirror (حذف توکن)
   if (adapted.config && adapted.config.mirror) {
-    // اگر Mirror فعال است، توکن را پاک کن (برای امنیت)
     if (adapted.config.mirror.token) {
       adapted.config.mirror._previousToken = '***REMOVED***';
       adapted.config.mirror.token = '';
     }
   }
   
-  // 6. به‌روزرسانی UUID (اختیاری - برای امنیت)
-  // اگر می‌خواهید UUID جدید تولید شود، این بخش را فعال کنید
-  // اما برای حفظ کاربران فعلی، UUID را تغییر نمی‌دهیم
-  
-  // 7. به‌روزرسانی ECH SNI
+  // 6. به‌روزرسانی ECH SNI
   if (adapted.config && adapted.config.ECHConfig && adapted.config.ECHConfig.SNI) {
     const oldSNI = adapted.config.ECHConfig.SNI;
-    // اگر SNI به دامنه قبلی اشاره دارد، به‌روزرسانی کن
     if (oldSNI && oldSNI !== currentHost && (oldSNI.includes(adapted.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
       adapted.config.ECHConfig.SNI = currentHost;
       adapted.config.ECHConfig._previousSNI = oldSNI;
     }
   }
   
-  // 8. به‌روزرسانی Central API
+  // 7. به‌روزرسانی Central API
   if (adapted.config && adapted.config.centralApi) {
     const oldApi = adapted.config.centralApi;
     if (oldApi.includes(adapted.sourceWorker?.host) || oldApi.includes('novaproxy')) {
-      // Central API را غیرفعال کن تا با تنظیمات جدید تداخل نداشته باشد
       adapted.config.centralApi = '';
       adapted.config._previousCentralApi = oldApi;
     }
@@ -3853,14 +3835,12 @@ async function restoreFullBackup(file) {
 
     let { config, network, users, usage, warp, tg, logs } = data.data;
     
-    // ============== اعمال مهاجرت ==============
+    // اعمال مهاجرت
     if (migrationMode) {
-      // تطبیق تنظیمات با ورکر جدید
       const adapted = adaptConfigForNewWorker(data, true);
       config = adapted.config;
       network = adapted.network;
       
-      // نمایش پیام مهاجرت
       console.log('🔄 Migration applied:', {
         previousHost: config?._previousHost || 'unknown',
         currentHost: location.host,
@@ -3868,10 +3848,8 @@ async function restoreFullBackup(file) {
       });
     }
 
-    // ============== ذخیره تنظیمات ==============
-    // 1. ذخیره Config
+    // ذخیره تنظیمات
     if (config) {
-      // حذف فیلدهای موقت مهاجرت قبل از ذخیره
       const cleanConfig = { ...config };
       delete cleanConfig._previousHost;
       delete cleanConfig._previousCentralApi;
@@ -3886,7 +3864,6 @@ async function restoreFullBackup(file) {
       STATE.config = cleanConfig;
     }
 
-    // 2. ذخیره Network Settings
     if (network) {
       const cleanNetwork = { ...network };
       delete cleanNetwork._previousAdminPath;
@@ -3897,17 +3874,13 @@ async function restoreFullBackup(file) {
       STATE.net = cleanNetwork;
     }
 
-    // 3. ذخیره کاربران
+    // ذخیره کاربران
     if (users && users.length > 0) {
-      // اگر در حالت مهاجرت هستیم و کاربران فعلی وجود دارند، می‌توانیم ادغام کنیم
       let finalUsers = users;
       
       if (preserveUsers) {
-        // کاربران جدید را با کاربران موجود ادغام کن
         const currentUsers = STATE.users || [];
         const existingIds = new Set(currentUsers.map(u => u.id));
-        
-        // کاربرانی که ID تکراری ندارند را اضافه کن
         const newUsers = users.filter(u => !existingIds.has(u.id));
         finalUsers = [...currentUsers, ...newUsers];
       }
@@ -3920,7 +3893,7 @@ async function restoreFullBackup(file) {
       STATE.multiUser = finalUsers.length > 0;
     }
 
-    // 4. ذخیره مصرف
+    // ذخیره مصرف
     if (usage) {
       await API.post('usage.json', usage);
       STATE.usage = usage;
@@ -3934,17 +3907,17 @@ async function restoreFullBackup(file) {
       STATE.usageIO = usage.io || {};
     }
 
-    // 5. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم یا WARP غیرفعال باشد)
+    // ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
     if (warp && !migrationMode) {
       await API.post('warp.json', warp);
     }
 
-    // 6. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم یا توکن وجود داشته باشد)
+    // ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
     if (tg && !migrationMode) {
       await API.post('tg.json', tg);
     }
 
-    // 7. به‌روزرسانی UI
+    // به‌روزرسانی UI
     await loadLive();
     renderUsers();
     renderKPIs();
@@ -3967,53 +3940,105 @@ async function restoreFullBackup(file) {
 }
 
 // ==============================================
-// اتصال دکمه‌های بکاپ
+// راه‌اندازی دکمه‌های بکاپ
 // ==============================================
 
-// دکمه اکسپورت کامل
-const exportBtn = document.getElementById('backup-export2');
-if (exportBtn) {
-  exportBtn.onclick = async function() {
-    const msg = document.getElementById('backup-msg');
-    if (!LIVE) {
-      msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
-      msg.style.color = 'var(--wn)';
-      return;
-    }
-    
-    msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
-    msg.style.color = 'var(--mu)';
-    
-    try {
-      const backupData = await fetchFullBackup();
-      downloadBackup(backupData);
-      msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
-      msg.style.color = 'var(--ok)';
-      toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
-    } catch (e) {
-      msg.textContent = '⚠️ ' + e.message;
-      msg.style.color = 'var(--dg)';
-      toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
-    }
-  };
-}
+// اطمینان از وجود عناصر و اتصال رویدادها
+document.addEventListener('DOMContentLoaded', function() {
+  // دکمه اکسپورت کامل
+  const exportBtn = document.getElementById('backup-export2');
+  if (exportBtn) {
+    exportBtn.onclick = async function() {
+      const msg = document.getElementById('backup-msg');
+      if (!LIVE) {
+        msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
+        msg.style.color = 'var(--wn)';
+        return;
+      }
+      
+      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
+      msg.style.color = 'var(--mu)';
+      
+      try {
+        const backupData = await fetchFullBackup();
+        downloadBackup(backupData);
+        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
+        msg.style.color = 'var(--ok)';
+        toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
+      } catch (e) {
+        msg.textContent = '⚠️ ' + e.message;
+        msg.style.color = 'var(--dg)';
+        toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
+      }
+    };
+  }
 
-// دکمه ایمپورت کامل
-const importBtn = document.getElementById('backup-import2');
-const fileInput = document.getElementById('backup-file2');
+  // دکمه ایمپورت کامل
+  const importBtn = document.getElementById('backup-import2');
+  const fileInput = document.getElementById('backup-file2');
 
-if (importBtn && fileInput) {
-  importBtn.onclick = function() {
-    fileInput.click();
-  };
+  if (importBtn && fileInput) {
+    importBtn.onclick = function() {
+      fileInput.click();
+    };
+    
+    fileInput.onchange = function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        restoreFullBackup(file);
+        fileInput.value = '';
+      }
+    };
+  }
+});
+
+// اگر DOMContentLoaded قبلاً رخ داده بود، رویدادها را مستقیم وصل کن
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  // اتصال مجدد رویدادها
+  const exportBtn = document.getElementById('backup-export2');
+  if (exportBtn && !exportBtn._wired) {
+    exportBtn._wired = true;
+    exportBtn.onclick = async function() {
+      const msg = document.getElementById('backup-msg');
+      if (!LIVE) {
+        msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
+        msg.style.color = 'var(--wn)';
+        return;
+      }
+      
+      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
+      msg.style.color = 'var(--mu)';
+      
+      try {
+        const backupData = await fetchFullBackup();
+        downloadBackup(backupData);
+        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
+        msg.style.color = 'var(--ok)';
+        toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
+      } catch (e) {
+        msg.textContent = '⚠️ ' + e.message;
+        msg.style.color = 'var(--dg)';
+        toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
+      }
+    };
+  }
   
-  fileInput.onchange = function(e) {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      restoreFullBackup(file);
-      fileInput.value = ''; // reset input
-    }
-  };
+  const importBtn = document.getElementById('backup-import2');
+  const fileInput = document.getElementById('backup-file2');
+  if (importBtn && fileInput && !importBtn._wired) {
+    importBtn._wired = true;
+    importBtn.onclick = function() {
+      fileInput.click();
+    };
+    
+    fileInput.onchange = function(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        restoreFullBackup(file);
+        fileInput.value = '';
+      }
+    };
+  }
 }
 </script>
 </body>
