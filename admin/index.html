@@ -1166,7 +1166,7 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
 <div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
 <div class="card card-pad">
   <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
     <button class="btn ghost sm" id="backup-export2" data-i18n="backup_export">Export</button>
     <button class="btn ghost sm" id="backup-import2" data-i18n="backup_import">Import</button>
     <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
@@ -1174,19 +1174,20 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
   </div>
   
   <!-- بخش جدید: تنظیمات مهاجرت -->
-  <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+  <div style="border-top:1px solid var(--bd);padding-top:14px">
     <div style="font-weight:600;font-size:13px;color:var(--ac);margin-bottom:4px" data-i18n="migrate_h">🔄 Migration Settings</div>
     <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="migrate_s">When restoring a backup from another worker, enable "Migration Mode" to automatically adapt settings (domains, paths, and environment-specific values) to the new worker.</p>
     <div class="field-row">
       <div class="l">Migration Mode<small>Auto-adapt settings for the new worker</small></div>
-      <div class="sw on" id="t2-migration"><span class="k"></span></div>
+      <div class="sw" id="t2-migration"><span class="k"></span></div>
     </div>
     <div class="field-row">
-      <div class="l">Preserve User Data<small>Keep user quotas, usage, and expiry dates</small></div>
-      <div class="sw on" id="t2-preserve-users"><span class="k"></span></div>
+      <div class="l">Preserve User Data<small>Keep existing user quotas, usage, and expiry dates when merging</small></div>
+      <div class="sw" id="t2-preserve-users"><span class="k"></span></div>
     </div>
   </div>
   
+  <!-- Factory Reset -->
   <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
     <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px" data-i18n="reset_h">Factory reset</div>
     <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="reset_s">Wipes everything from the database (settings, network, clean IPs, users, Cloudflare and Telegram keys) and restores the initial state. Your panel password is kept. This cannot be undone.</p>
@@ -3653,21 +3654,22 @@ async function loadVersions(){
 })();
 
 // ==============================================
-// بخش بکاپ و مهاجرت کامل - نسخه نهایی
+// بخش بکاپ و مهاجرت کامل - نسخه نهایی با ذخیره دائمی
 // ==============================================
 
 // تابع دریافت تمام اطلاعات از سرور
 async function fetchFullBackup() {
   try {
     // دریافت تمام اطلاعات از API های مختلف
-    const [config, network, users, usage, warp, tg, logs] = await Promise.all([
+    const [config, network, users, usage, warp, tg, logs, system] = await Promise.all([
       API.get('config.json').catch(() => ({})),
       API.get('network-settings.json').catch(() => ({})),
       API.get('users.json').catch(() => ({ users: [] })),
       API.get('usage.json').catch(() => ({})),
       API.get('warp.json').catch(() => ({})),
       API.get('tg.json').catch(() => ({})),
-      API.get('log.json').catch(() => ([]))
+      API.get('log.json').catch(() => ([])),
+      API.get('system.json').catch(() => ({}))
     ]);
 
     // اطلاعات اضافی مانند مصرف روزانه و درخواست‌ها
@@ -3675,9 +3677,6 @@ async function fetchFullBackup() {
     const reqsDay = STATE.reqsDay || {};
     const usageDay = STATE.usageDay || {};
     const usageIO = STATE.usageIO || {};
-
-    // دریافت اطلاعات سیستم فعلی
-    const system = await API.get('system.json').catch(() => ({}));
 
     return {
       version: '2.0',
@@ -3734,7 +3733,6 @@ function adaptConfigForNewWorker(data, migrationMode) {
   
   const adapted = JSON.parse(JSON.stringify(data));
   const currentHost = location.host;
-  const currentOrigin = location.origin;
   
   // 1. به‌روزرسانی HOSTS
   if (adapted.config && adapted.config.HOSTS && Array.isArray(adapted.config.HOSTS)) {
@@ -3752,17 +3750,17 @@ function adaptConfigForNewWorker(data, migrationMode) {
     }
   }
   
-  // 3. به‌روزرسانی مسیرهای استتار
+  // 3. به‌روزرسانی مسیرهای استتار (ریست می‌شوند)
   if (adapted.network && adapted.network.disguise) {
-    if (adapted.network.adminPath && adapted.network.adminPath.length > 0) {
+    if (adapted.network.adminPath) {
       adapted.network._previousAdminPath = adapted.network.adminPath;
       adapted.network.adminPath = '';
     }
-    if (adapted.network.loginPath && adapted.network.loginPath.length > 0) {
+    if (adapted.network.loginPath) {
       adapted.network._previousLoginPath = adapted.network.loginPath;
       adapted.network.loginPath = '';
     }
-    if (adapted.network.subPath && adapted.network.subPath.length > 0) {
+    if (adapted.network.subPath) {
       adapted.network._previousSubPath = adapted.network.subPath;
       adapted.network.subPath = '';
     }
@@ -3783,7 +3781,7 @@ function adaptConfigForNewWorker(data, migrationMode) {
     }
   }
   
-  // 5. به‌روزرسانی GitHub Mirror (حذف توکن)
+  // 5. حذف توکن GitHub Mirror
   if (adapted.config && adapted.config.mirror) {
     if (adapted.config.mirror.token) {
       adapted.config.mirror._previousToken = '***REMOVED***';
@@ -3794,13 +3792,14 @@ function adaptConfigForNewWorker(data, migrationMode) {
   // 6. به‌روزرسانی ECH SNI
   if (adapted.config && adapted.config.ECHConfig && adapted.config.ECHConfig.SNI) {
     const oldSNI = adapted.config.ECHConfig.SNI;
-    if (oldSNI && oldSNI !== currentHost && (oldSNI.includes(adapted.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
+    if (oldSNI && oldSNI !== currentHost && 
+        (oldSNI.includes(adapted.sourceWorker?.host) || oldSNI.includes('cloudflare-ech.com'))) {
       adapted.config.ECHConfig.SNI = currentHost;
       adapted.config.ECHConfig._previousSNI = oldSNI;
     }
   }
   
-  // 7. به‌روزرسانی Central API
+  // 7. غیرفعال کردن Central API
   if (adapted.config && adapted.config.centralApi) {
     const oldApi = adapted.config.centralApi;
     if (oldApi.includes(adapted.sourceWorker?.host) || oldApi.includes('novaproxy')) {
@@ -3812,9 +3811,66 @@ function adaptConfigForNewWorker(data, migrationMode) {
   return adapted;
 }
 
+// تابع ذخیره دائمی مصرف کاربران
+async function saveUserUsageData(usage, usageDay, usageIO) {
+  const results = [];
+  
+  // 1. ذخیره مصرف کل
+  if (usage && Object.keys(usage).length > 0) {
+    try {
+      const resp = await fetch('/admin/usage.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(usage)
+      });
+      results.push({ type: 'usage', ok: resp.ok });
+      if (resp.ok) STATE.usage = usage;
+    } catch (e) {
+      results.push({ type: 'usage', ok: false, error: e.message });
+    }
+  }
+  
+  // 2. ذخیره مصرف روزانه
+  if (usageDay && Object.keys(usageDay).length > 0) {
+    try {
+      const resp = await fetch('/admin/usage-day.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(usageDay)
+      });
+      results.push({ type: 'usageDay', ok: resp.ok });
+      if (resp.ok) STATE.usageDay = usageDay;
+    } catch (e) {
+      results.push({ type: 'usageDay', ok: false, error: e.message });
+    }
+  }
+  
+  // 3. ذخیره مصرف IO
+  if (usageIO && Object.keys(usageIO).length > 0) {
+    try {
+      const resp = await fetch('/admin/usage-io.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(usageIO)
+      });
+      results.push({ type: 'usageIO', ok: resp.ok });
+      if (resp.ok) STATE.usageIO = usageIO;
+    } catch (e) {
+      results.push({ type: 'usageIO', ok: false, error: e.message });
+    }
+  }
+  
+  return results;
+}
+
+// تابع بازیابی از فایل JSON (نسخه کامل با ذخیره دائمی)
 async function restoreFullBackup(file) {
   const msg = document.getElementById('backup-msg');
-  if (!LIVE) return previewToast();
+  if (!LIVE) {
+    msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش - اتصال به سرور برقرار نیست' : 'Preview mode - no server connection';
+    msg.style.color = 'var(--wn)';
+    return;
+  }
   
   try {
     const text = await file.text();
@@ -3848,6 +3904,7 @@ async function restoreFullBackup(file) {
     }
 
     // ============== ذخیره تنظیمات ==============
+    
     // 1. ذخیره Config
     if (config) {
       const cleanConfig = { ...config };
@@ -3894,85 +3951,72 @@ async function restoreFullBackup(file) {
       STATE.multiUser = finalUsers.length > 0;
     }
 
-    // ============== بازیابی مصرف کاربران ==============
-    // ساختار مصرف در فایل بکاپ:
-    // usage: {} (خالی)
-    // usageDay: { userId: number, ... }
-    // usageIO: { userId: { up: number, down: number }, ... }
+    // ============== بازیابی مصرف کاربران (ذخیره دائمی) ==============
+    console.log('📊 Restoring user usage data...');
     
-    // 4. بازیابی مصرف (usage) - از روی usageIO و usageDay محاسبه می‌شود
-    if (data.data.usageDay || data.data.usageIO) {
-      const newUsage = {};
-      
-      // اگر usage موجود است، از آن استفاده کن
-      if (usage && typeof usage === 'object' && Object.keys(usage).length > 0) {
-        Object.assign(newUsage, usage);
-      }
-      
-      // اگر usageIO موجود است، مجموع up+down را به عنوان مصرف کل در نظر بگیر
-      if (data.data.usageIO) {
-        for (const [userId, io] of Object.entries(data.data.usageIO)) {
-          if (io && typeof io === 'object') {
-            const total = (io.up || 0) + (io.down || 0);
-            // اگر قبلاً مصرفی برای این کاربر ثبت نشده، مقدار جدید را ذخیره کن
-            if (!newUsage[userId] || newUsage[userId] === 0) {
-              newUsage[userId] = total;
-            }
-          }
+    // آماده‌سازی داده‌های مصرف
+    const newUsage = {};
+    const newUsageDay = {};
+    const newUsageIO = {};
+    
+    // اگر usageIO موجود است، مجموع up+down را به عنوان مصرف کل در نظر بگیر
+    if (data.data.usageIO) {
+      for (const [userId, io] of Object.entries(data.data.usageIO)) {
+        if (io && typeof io === 'object') {
+          const total = (io.up || 0) + (io.down || 0);
+          newUsage[userId] = total;
+          newUsageIO[userId] = { ...io };
         }
-      }
-      
-      // اگر مصرف روزانه موجود است، آن را هم ذخیره کن
-      if (data.data.usageDay) {
-        STATE.usageDay = { ...data.data.usageDay };
-        try {
-          await API.post('usage-day.json', STATE.usageDay);
-        } catch (e) {
-          console.warn('Could not save usageDay:', e);
-        }
-      }
-      
-      // ذخیره مصرف IO
-      if (data.data.usageIO) {
-        STATE.usageIO = { ...data.data.usageIO };
-        try {
-          await API.post('usage-io.json', STATE.usageIO);
-        } catch (e) {
-          console.warn('Could not save usageIO:', e);
-        }
-      }
-      
-      // ذخیره مصرف اصلی
-      if (Object.keys(newUsage).length > 0) {
-        STATE.usage = newUsage;
-        await API.post('usage.json', newUsage);
-        console.log('✅ Usage restored:', newUsage);
-      } else {
-        console.warn('⚠️ No usage data to restore');
       }
     }
-
-    // 5. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
+    
+    // اگر usageDay موجود است، آن را هم ذخیره کن
+    if (data.data.usageDay) {
+      for (const [userId, day] of Object.entries(data.data.usageDay)) {
+        newUsageDay[userId] = day || 0;
+      }
+    }
+    
+    // اگر usage اصلی موجود است، آن را به‌روزرسانی کن
+    if (usage && typeof usage === 'object') {
+      for (const [userId, total] of Object.entries(usage)) {
+        if (!newUsage[userId]) {
+          newUsage[userId] = total;
+        }
+      }
+    }
+    
+    // ========== ذخیره داده‌های مصرف در سرور ==========
+    const saveResults = await saveUserUsageData(newUsage, newUsageDay, newUsageIO);
+    
+    // نمایش نتیجه ذخیره‌سازی
+    const allOk = saveResults.every(r => r.ok);
+    if (!allOk) {
+      console.warn('⚠️ Some usage data failed to save:', saveResults.filter(r => !r.ok));
+    }
+    
+    // 4. ذخیره WARP (فقط اگر در حالت مهاجرت نباشیم)
     if (warp && !migrationMode) {
       await API.post('warp.json', warp);
     }
 
-    // 6. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
+    // 5. ذخیره تلگرام (فقط اگر در حالت مهاجرت نباشیم)
     if (tg && !migrationMode) {
       await API.post('tg.json', tg);
     }
 
-    // 7. به‌روزرسانی UI
+    // 6. به‌روزرسانی UI
     await loadLive();
     renderUsers();
     renderKPIs();
     syncFormValues();
     
+    const userCount = Object.keys(STATE.usage).length;
     const msgText = migrationMode 
-      ? (lang === 'fa' ? '✅ بازیابی با مهاجرت انجام شد' : '✅ Restore with migration completed')
-      : (lang === 'fa' ? '✅ بازیابی کامل انجام شد' : '✅ Full restore completed');
+      ? (lang === 'fa' ? `✅ بازیابی با مهاجرت انجام شد (${userCount} کاربر با مصرف)` : `✅ Restore with migration completed (${userCount} users with usage)`)
+      : (lang === 'fa' ? `✅ بازیابی کامل انجام شد (${userCount} کاربر با مصرف)` : `✅ Full restore completed (${userCount} users with usage)`);
     
-    msg.textContent = msgText + ' (' + Object.keys(STATE.usage).length + ' کاربر با مصرف)';
+    msg.textContent = msgText;
     msg.style.color = 'var(--ok)';
     toast(msgText);
     
@@ -3985,11 +4029,10 @@ async function restoreFullBackup(file) {
 }
 
 // ==============================================
-// راه‌اندازی دکمه‌های بکاپ
+// راه‌اندازی و اتصال دکمه‌های بکاپ
 // ==============================================
 
-// اطمینان از وجود عناصر و اتصال رویدادها
-document.addEventListener('DOMContentLoaded', function() {
+function setupBackupButtons() {
   // دکمه اکسپورت کامل
   const exportBtn = document.getElementById('backup-export2');
   if (exportBtn) {
@@ -4035,55 +4078,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
   }
-});
+}
 
-// اگر DOMContentLoaded قبلاً رخ داده بود، رویدادها را مستقیم وصل کن
+// ==============================================
+// اجرای راه‌اندازی
+// ==============================================
+
+// اطمینان از اجرا پس از بارگذاری کامل صفحه
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  // اتصال مجدد رویدادها
-  const exportBtn = document.getElementById('backup-export2');
-  if (exportBtn && !exportBtn._wired) {
-    exportBtn._wired = true;
-    exportBtn.onclick = async function() {
-      const msg = document.getElementById('backup-msg');
-      if (!LIVE) {
-        msg.textContent = lang === 'fa' ? 'حالت پیش‌نمایش' : 'Preview mode';
-        msg.style.color = 'var(--wn)';
-        return;
-      }
-      
-      msg.textContent = lang === 'fa' ? 'در حال آماده‌سازی بکاپ...' : 'Preparing backup...';
-      msg.style.color = 'var(--mu)';
-      
-      try {
-        const backupData = await fetchFullBackup();
-        downloadBackup(backupData);
-        msg.textContent = lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved';
-        msg.style.color = 'var(--ok)';
-        toast(lang === 'fa' ? '✅ بکاپ کامل ذخیره شد' : '✅ Full backup saved');
-      } catch (e) {
-        msg.textContent = '⚠️ ' + e.message;
-        msg.style.color = 'var(--dg)';
-        toast(lang === 'fa' ? '❌ خطا در ذخیره بکاپ' : '❌ Backup error', 1);
-      }
-    };
-  }
-  
-  const importBtn = document.getElementById('backup-import2');
-  const fileInput = document.getElementById('backup-file2');
-  if (importBtn && fileInput && !importBtn._wired) {
-    importBtn._wired = true;
-    importBtn.onclick = function() {
-      fileInput.click();
-    };
-    
-    fileInput.onchange = function(e) {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        restoreFullBackup(file);
-        fileInput.value = '';
-      }
-    };
-  }
+  setupBackupButtons();
+} else {
+  document.addEventListener('DOMContentLoaded', setupBackupButtons);
 }
 </script>
 </body>
