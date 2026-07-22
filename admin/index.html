@@ -1163,24 +1163,25 @@ html[data-theme=dark] .qr-ph{border-color:#fff}
             </div>
           </div>
         </div>
-        <div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
-        <div class="card card-pad">
-          <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button class="btn ghost sm" id="backup-export2" data-i18n="backup_export">Export</button>
-            <button class="btn ghost sm" id="backup-import2" data-i18n="backup_import">Import</button>
-            <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
-            <span id="backup-msg" style="font-size:12px;color:var(--mu)"></span>
-          </div>
-          <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
-            <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px" data-i18n="reset_h">Factory reset</div>
-            <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="reset_s">Wipes everything from the database (settings, network, clean IPs, users, Cloudflare and Telegram keys) and restores the initial state. Your panel password is kept. This cannot be undone.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button class="btn sm" id="factory-reset" style="background:var(--dg);color:#fff;border-color:var(--dg)" data-i18n="reset_btn">Factory reset</button>
-              <span id="reset-msg" style="font-size:12px;color:var(--mu)"></span>
-            </div>
-          </div>
-        </div>
+<!-- بخش Backup & maintenance را با کد زیر جایگزین کنید -->
+<div class="section-label" data-i18n="set_maint">Backup &amp; maintenance</div>
+<div class="card card-pad">
+  <p style="font-size:12.5px;color:var(--mu);margin-bottom:12px" data-i18n="backup_s">Export all settings (config + network + users) to a file, or restore from one. The file contains secrets, so keep it safe.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button class="btn ghost sm" id="backup-export2" data-i18n="backup_export">Export</button>
+    <button class="btn ghost sm" id="backup-import2" data-i18n="backup_import">Import</button>
+    <input id="backup-file2" type="file" accept="application/json,.json" style="display:none">
+    <span id="backup-msg" style="font-size:12px;color:var(--mu)"></span>
+  </div>
+  <div style="border-top:1px solid var(--bd);margin-top:16px;padding-top:14px">
+    <div style="font-weight:600;font-size:13px;color:var(--dg);margin-bottom:4px" data-i18n="reset_h">Factory reset</div>
+    <p style="font-size:12.5px;color:var(--mu);margin-bottom:11px" data-i18n="reset_s">Wipes everything from the database (settings, network, clean IPs, users, Cloudflare and Telegram keys) and restores the initial state. Your panel password is kept. This cannot be undone.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn sm" id="factory-reset" style="background:var(--dg);color:#fff;border-color:var(--dg)" data-i18n="reset_btn">Factory reset</button>
+      <span id="reset-msg" style="font-size:12px;color:var(--mu)"></span>
+    </div>
+  </div>
+</div>
 
         <div class="section-label" data-i18n="upd_h">Update panel</div>
         <div class="card card-pad">
